@@ -1,138 +1,788 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ege's Spatial Audio Page</title>
-<<<<<<< HEAD
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;400&display=swap" rel="stylesheet">
+<html>
 
-=======
-    <style>
-        /* Custom CSS styles for a modern and colorful UI */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-        .container {
-            max-width: 960px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        }
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            text-align: center;
-        }
-        nav ul li {
-            display: inline;
-            margin-right: 20px;
-        }
-        section {
-            margin-bottom: 40px;
-        }
-        h2 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 5px;
-        }
-        p {
-            color: #555;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        footer {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #ccc;
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Basic Page Needs
+        ================================================== -->
+
+    <title>Ege Erdem</title>
+    <link rel="shortcut icon" href="https://www.kcl.ac.uk/favicon.ico" />
+    <meta name="description" content="Ege Erdem's Personal Website">
+    <meta name="keywords" content="spatial audio, sound field reconstruction, immersive audio, AI music">
+    <meta name="author" content="Ege Erdem">
+    <!-- Mobile Specific Metas
+        ================================================== -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Template CSS Files
+        ================================================== -->
+    <!-- Twitter Bootstrs CSS -->
+    
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <!-- Ionicons Fonts Css -->
+    <link rel="stylesheet" href="assets/css/ionicons.min.css">
+    <!-- animate css -->
+    <link rel="stylesheet" href="assets/css/animate.css">
+    <!-- Hero area slider css-->
+    <link rel="stylesheet" href="assets/css/slider.css">
+    <!-- owl craousel css -->
+    <link rel="stylesheet" href="assets/css/owl.carousel.css">
+    <link rel="stylesheet" href="assets/css/owl.theme.css">
+    <link rel="stylesheet" href="assets/css/jquery.fancybox.css">
+    <!-- template main css file -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <!-- responsive css -->
+    <link rel="stylesheet" href="assets/css/responsive.css">
+    <!-- Template Javascript Files
+        ================================================== -->
+    <!-- modernizr js -->
+    <script src="assets/js/modernizr-2.6.2.min.js.download"></script>
+    <!-- jquery -->
+    <script src="assets/js/jquery.min.js.download"></script>
+    <!-- owl carouserl js -->
+    <script src="assets/js/owl.carousel.min.js.download"></script>
+    <!-- bootstrap js -->
+
+    <script src="assets/js/bootstrap.min.js.download"></script>
+    <!-- wow js -->
+    <script src="assets/js/wow.min.js.download"></script>
+    <!-- slider js -->
+    <script src="assets/js/slider.js.download"></script>
+    <script src="assets/js/jquery.fancybox.js.download"></script>
+    <!-- template main js -->
+    <script src="assets/js/main.js.download"></script>
+    <style type="text/css">
+        .fancybox-margin {
+            margin-right: 16px;
         }
     </style>
->>>>>>> 5b7b98a83fc6bd804398c1646728cca94cac9209
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1 style="color: #333;">Ege Erdem, PhD Researcher in Spatial Audio</h1>
-<<<<<<< HEAD
-            <p><a href="mailto:ege.erdem@kcl.ac.uk">ege.erdem@kcl.ac.uk</a> | London</p>
 
-=======
->>>>>>> 5b7b98a83fc6bd804398c1646728cca94cac9209
-            <nav>
-                <ul>
-                    <li><a href="#about">About Me</a></li>
-                    <li><a href="#education">Education</a></li>
-                    <li><a href="#work">Work</a></li>
-                    <li><a href="#projects">Projects</a></li>
-                    <li><a href="#publications">Publications</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZL4BP5RJ60"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-ZL4BP5RJ60');
+    </script>
+
+</head>
+
+<body data-new-gr-c-s-check-loaded="14.984.0" data-gr-ext-installed="">
+    <!--
+        ==================================================
+        Header Section Start
+        ================================================== -->
+    <header id="top-bar" class="navbar-fixed-top animated-header">
+        <div class="container">
+            <div class="navbar-header">
+                <!-- responsive nav button -->
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <!-- /responsive nav button -->
+                <!-- logo -->
+                <div class="navbar-brand">
+                    <a href="index.html" style="font-size:1.3em;color:black">
+                        Ege Erdem
+                    </a>
+                </div>
+                <!-- /logo -->
+            </div>
+            <!-- main menu -->
+            <nav class="collapse navbar-collapse navbar-right" role="navigation">
+                <div class="main-menu">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#">Home</a>
+                        </li>
+                        <li>
+                            <a href="#Research">Research</a>
+                        </li>
+                        <li>
+                            <a href="#Work">Work</a>
+                        </li>
+                        <li>
+                            <a href="#Publication">Publication</a>
+                        </li>
+                        <li>
+                            <a href="#Profession">Profession</a>
+                        </li>
+                    </ul>
+                </div>
             </nav>
-        </header>
-        <main>
-            <section id="about">
-                <h2>About Me</h2>
-                <p>I am a PhD candidate specializing in Spatial Audio at King's College London. My research interests include sound field reconstruction, immersive audio, and AI+Music.</p>
-            </section>
-            <section id="education">
-                <h2>Education</h2>
-                <p>PhD in Spatial Audio with NMES Studentship, King’s College London, Oct. 2024 — 2026</p>
-<<<<<<< HEAD
-=======
-                <p>PhD. Candidate (dropped), Multimedia Informatics, Graduate School of Informatics, METU (Middle East Technical University), 2020 — 2023</p>
->>>>>>> 5b7b98a83fc6bd804398c1646728cca94cac9209
-                <p>M.SC, Multimedia Informatics, METU, 2017 — 2020</p>
-                <p>B.SC Mechanical Engineering, METU, 2011 — 2016</p>
-            </section>
-            <section id="work/internships">
-                <h2>Work</h2>
-<<<<<<< HEAD
-                <p>Intern & Visiting Researcher at Music Technology Group, UPF, Barcelona, Jan-March 2024</p>
-                <p>Research Assistant & Teaching Assistant at METU Spatial Audio Research Group & Multimedia Informatics Department, 2019 — 2024</p>
-                <p>Research Scientist for the TUBITAK 1001<sup>1</sup> Project: Audio Signal Processing for 6DoF Immersive Media, 2020 — 2023</p>
-                <p>Acoustical Consultant and Noise Control Engineer at Mezzo Studyo, 2016 — 2019</p>
-                <p class="footnote"><sup>1</sup> TUBITAK 1001: The most prestigious scientific research grant in Turkiye.</p>
-=======
-                <p>Intern/Visiting Researcher at Music Technology Group, Barcelona, Jan-March 2024</p>
-                <p>Audio Signal Processing for 6DoF Immersive Media (TUBITAK* Research Project), 2020 — 2023</p>
-                <p>Research Assistant & Teaching Assistant at METU Spatial Audio Research Group & Multimedia Informatics Department, 2019 — Present</p>
-                <p>Acoustical Consultant and Noise Control Engineer at Mezzo Studyo, Ankara, TR, 2016 — 2019</p>
->>>>>>> 5b7b98a83fc6bd804398c1646728cca94cac9209
-            </section>
-            <section id="publications">
-                <h2>Publications</h2>
-                <p>3D Perceptual Soundfield Reconstruction via Virtual Microphone Synthesis – Journal Poster (ICASSP 24’)</p>
-                <p>Sound Field Interpolation via Sparse Plane Wave Decomposition for 6DoF Immersive Audio (I3DA 23’)</p>
-                <p>3D Perceptual Soundfield Reconstruction via Virtual Microphone Synthesis (TASLP 23’)</p>
-                <p>Internal Time Delay Calibration of Spherical Microphone Arrays for 6DoF Audio Recordings (WASPAA 21’)</p>
-                <p>Orientation Calibration of Rigid Spherical Microphone Arrays for 6DoF Audio Recordings (I3DA 21’)</p>
-                <p>Perceptual Soundfield Reconstruction in Three Dimensions via Sound Field Extrapolation, (ICASSP 19’)</p>
-                <p>Acoustic Design and Analysis Methods of Underground Subway Stations (TAKDER 19’)</p>
-            </section>
-            <section id="contact">
-                <h2>Contact</h2>
-                <p>Email: ege.erdem@gmail.com</p>
-            </section>
-        </main>
-        <footer>
-            <p>&copy; Ege's Page, demo </p>
+            <!-- /main nav -->
+        </div>
+    </header>
+    <!--
+        ==================================================
+        Slider Section Start
+        ================================================== -->
+    <!--
+            ==================================================
+            Slider Section Start
+            ================================================== -->
+
+    <section id="about" style=" margin-top: -80px;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 col-sm-4">
+                    <div class="block wow fadeInRight animated" data-wow-delay=".2s" data-wow-duration="400ms
+                        style="visibility: visible; animation-duration: 400ms; animation-delay: 0.0s; animation-name: fadeInRight;">
+                        <br>
+                        <br>
+                        <br>
+                        <div align=center><img class="icon" src="images/selfish/self.jpg" style="max-width: 200px;"></div>
+
+                    </div>
+                </div>
+                <div class="col-md-7 col-sm-7">
+                    <br>
+                    <div class="block wow fadeInLeft animated" data-wow-delay=".2s" data-wow-duration="400ms
+                        style="visibility: visible; animation-duration: 400ms; animation-delay: 0.0s; animation-name: fadeInLeft; margin-bottom: 10px;" >
+                        <h2>
+                            About
+                        </h2>
+                        <p> 
+                            I am a PhD candidate in Spatial Audio at <a href="https://www.kcl.ac.uk/">King's College London</a>, funded by the NMES Studentship. 
+                            <br>
+                            I completed my M.Sc. in Multimedia Informatics at <a href="https://www.metu.edu.tr/">Middle East Technical University (METU)</a>, where I also worked as a Research Assistant in the Spatial Audio Research Group. Prior to that, I earned my B.Sc. in Mechanical Engineering from METU.
+                            <br>
+                        </p>
+                        <p>
+                            My research interests include sound field reconstruction, immersive audio, spatial audio signal processing, and AI applications in music and audio. I have been fortunate to work as a Visiting Researcher at <a href="https://www.upf.edu/web/mtg">Music Technology Group, UPF Barcelona</a> and as a Research Intern at <a href="https://www.nii.ac.jp/en/">National Institute of Informatics (NII)</a>, Tokyo.
+                            During my master's studies, I worked as an Acoustical Consultant and Noise Control Engineer at Mezzo Studyo.
+                        </p>
+                        <p> <a href="https://scholar.google.com/citations?user=YOUR_ID">Google Scholar</a>
+                        &nbsp;&middot;&nbsp; <a href="https://github.com/egerdem">GitHub</a>
+                        &nbsp;&middot;&nbsp; <a href="mailto:ege.erdem@kcl.ac.uk">Email</a>
+                        &nbsp;&middot;&nbsp; <a href="https://www.linkedin.com/in/ege-erdem/">LinkedIn</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+    </section>
+    
+    
+    <section id="News" style=" margin-top: -100px;">
+        <div class="container">
+            <div class="row">
+                <div class="block wow fadeInRight animated" data-wow-delay=".2s" data-wow-duration="400ms
+                    style="visibility: visible; animation-duration: 400ms; animation-delay: 0.0s; animation-name: fadeInRight;">
+                    <h2>
+                        News
+                    </h2>
+                    <ul>
+                        <li>[2024/12] SF-Flow paper accepted! Check out the <a href="sf-flow/" target="_blank">project page</a></li>
+                        <li>[2024/10] Started PhD at King's College London with NMES Studentship</li>
+                        <li>[2024/03] Research internship at Music Technology Group, UPF Barcelona</li>
+                        <li>[20**/**] Paper accepted at ICASSP 20**!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <hr>
+    </section>
+
+
+    <section id="Research" style="padding-top: 40px; margin-top: -60px;">
+        <div class="container">
+            <div class="row">
+                <div class="block wow fadeInRight animated" data-wow-delay=".2s" data-wow-duration="400ms
+                    style="visibility: visible; animation-duration: 400ms; animation-delay: 0.0s; animation-name: fadeInRight;">
+                    <h2>
+                        Research
+                    </h2>
+                    <div align=center>
+                    <div class="img-wall" style="width: 85%;">
+                        <div class="img-wall-element">
+                            <img src="images/multi_modal.png" style="border: 3px gray dashed; border-radius: 15px;">
+                            <div><b>Multimodal Learning</b></div>
+                        </div>
+                        <div class="img-wall-element">
+                            <img src="images/self-supervision.png" style="border: 3px gray dashed; border-radius: 15px;">
+                            <div><b>Self-Supervision</b></div>
+                        </div>
+                        <div class="img-wall-element">
+                            <img src="images/3d_audio.png" style="border: 3px gray dashed; border-radius: 15px;">
+                            <div><b> Audio in Metaverse </b></div>
+                        </div>
+                        
+                    </div>
+                    </div>
+                    <p class="research" >
+                        My research focuses on spatial audio and sound field reconstruction, with particular interest in deep learning approaches for immersive audio, room acoustics analysis, and AI applications in music and audio processing. I work on developing novel methods for 6DoF audio rendering, perceptual soundfield reconstruction, and microphone array calibration.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <hr>
+    </section>
+    
+
+    <section id="Work" style="padding-top: 40px; margin-top: -60px;">
+        <div class="container">
+            <div class="row">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms" style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name:
+                    none;">
+                    <h2>
+                        Work Experience
+                    </h2>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-3 col-sm-3" align="center">
+                        <span style="min-width: 100px; max-width: 100px; display: inline-block;">
+                            <strong>NII</strong>
+                        </span>
+                    </div>
+                    <div class="col-md-7 col-sm-8">
+                        <p>
+                            <span class="mybold">National Institute of Informatics</span>, Tokyo, Japan &nbsp; 2024<br>
+                            Research Intern <br>
+                            Host: <a href="https://www.sh01.org/">Prof. Shoichi Koyama</a><br>
+                            Topic: Flow Matching for Sound Field Reconstruction
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <br>
+
+            <div class="row">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms" style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;"> 
+                    <div class="col-md-3 col-sm-3" align="center">
+                        <span style="min-width: 100px; max-width: 100px; display: inline-block;">
+                            <strong>MTG</strong>
+                        </span>
+                    </div>
+                    <div class="col-md-7 col-sm-8">
+                            <p>
+                                <span class="mybold">Music Technology Group, UPF</span>, Barcelona, Spain &nbsp; Jan. ~ Mar. 2024<br>
+                                Visiting Researcher <br>
+                                Topic: Spatial Audio and Music Information Retrieval
+                                <br>
+                            </p>
+
+                    </div>
+                </div>
+            </div>
+            <br>
+
+            <div class="row">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-3 col-sm-3" align="center">
+                        <span style="min-width: 100px; max-width: 100px; display: inline-block;">
+                            <strong>METU</strong>
+                        </span>
+                    </div>
+                
+                    <div class="col-md-7 col-sm-8">
+                            <p>
+                                <span class="mybold">Middle East Technical University</span>, Ankara, Turkey &nbsp; 2019 ~ 2024
+                                <br>
+                                Research & Teaching Assistant <br>
+                                Spatial Audio Research Group & Multimedia Informatics Department<br>
+                                Projects: 6DoF Immersive Audio (TUBITAK 1001 Grant)
+                                <br>
+                            </p>
+                    </div>
+                </div>
+            </div>
+            <br>
+
+            <div class="row">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-3 col-sm-3" align="center">
+                        <span style="min-width: 100px; max-width: 100px; display: inline-block;">
+                            <strong>Mezzo</strong>
+                        </span>
+                    </div>
+                
+                    <div class="col-md-7 col-sm-8">
+                            <p>
+                                <span class="mybold">Mezzo Studyo</span>, Ankara, Turkey &nbsp; 2016 ~ 2019
+                                <br>
+                                Acoustical Consultant & Noise Control Engineer <br>
+                                <br>
+                            </p>
+                    </div>
+                </div>
+            </div>
+            <br><br>
+        </div>
+    </section>
+    <hr>
+
+
+    <section id="Publication" style="padding-top: 40px; margin-top: -60px;">
+        <div class="container">
+            <div class="row">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <h2>
+                        Publication
+                    </h2>
+                    <p style="color:rgb(165, 165, 165); margin-top: -15px; margin-bottom: -5px;">&nbsp;&nbsp;(* indicates equal contribution)</p>
+                </div>
+            </div>
+            
+            <div class="row" name="multifoley" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href=" "><img src="images/projects/multifoley.jpg" alt=""
+                                style="width: 100%;  border-radius: 10px;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold"> <img src="images/new.png" alt="" style="width: 7%;">
+                                Video-Guided Foley Sound Generation with Multimodal Controls</span><br>
+            
+                            Ziyang Chen,
+                            <a href="https://pseeth.github.io/">Prem Seetharaman</a>,
+                            <a href="https://bryanrussell.org/">Bryan Russell</a>,
+                            <a href="https://www.urinieto.com/">Oriol Nieto</a>,
+                            <a href="https://www.davidbourgin.com/">David Bourgin</a>,
+                            <a href="http://andrewowens.com/">Andrew Owens</a>,
+                            <a href="https://www.justinsalamon.com/" target="_blank">Justin Salamon</a>
+                            <br>
+                            CVPR 2025
+                            <br>
+                            <a href="https://ificl.github.io/MultiFoley/">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://arxiv.org/abs/2411.17698">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://ificl.github.io/MultiFoley/#BibTeX" target="_blank">bibtex</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row" name="GPS-Gen" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href=""><img src="images/projects/gpsgen.jpg" alt="" style="width: 95%;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold"> <img src="images/new.png" alt="" style="width: 7%;"> GPS as a Control Signal for Image Generation </span><br>
+        
+                            <a href="https://cfeng16.github.io/">Chao Feng</a>,
+                            Ziyang Chen,
+                            <a href="https://holynski.org/">Aleksander Holynski</a>,
+                            <a href="https://people.eecs.berkeley.edu/~efros/">Alexei A. Efros</a>,
+                            <a href="http://andrewowens.com/">Andrew Owens</a>
+                            <br>
+                            CVPR 2025
+                            <br>
+                            <a href="https://cfeng16.github.io/gps-gen/">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://arxiv.org/abs/2501.12390">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://github.com/cfeng16/GPS2Pix">code</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://cfeng16.github.io/gps-gen/#bibtex">bibtex</a>
+                            <br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" name="Ego-Spatial" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href=""><img src="images/projects/geo-spatial.jpg" alt="" style="width: 95%;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold"> <img src="images/new.png" alt="" style="width: 7%;"> Supervising Sound Localization Using In-the-wild Ego-motion </span>
+                            <br>
+            
+                            <a href="https://annamin0.github.io/">Anna Min</a>,
+                            Ziyang Chen,
+                            <a href="https://hangzhaomit.github.io/">Hang Zhao</a>,
+                            <a href="http://andrewowens.com/">Andrew Owens</a>
+                            <br>
+                            CVPR 2025 (<span style="color:#a00"><b>Highlight</b></span>)
+                            <br>
+                            
+                            <!-- <a href="">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="">code</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="">bibtex</a> -->
+                            <!-- <br> -->
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" name="images-that-sound" style="margin-bottom: 20px;"> 
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href="https://arxiv.org/abs/2405.12221"><img src="images/projects/images-that-sound.jpg" alt="" style="width: 100%;  border-radius: 10px;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                            <p>
+                                <span class="mybold">
+                                    Images that Sound: Composing Images and Sounds on a Single Canvas</span><br>
+            
+                                Ziyang Chen,
+                                <a href="https://dangeng.github.io/">Daniel Geng</a>,
+                                <a href="http://andrewowens.com/">Andrew Owens</a>
+                                <br>
+                                NeurIPS 2024 
+                                <br>
+                                <a href="https://thecvf-art.com/project/images-that-sound/">CVPR 2024 AI Art Gallery</a>
+                                <br>
+                                <a href="https://ificl.github.io/images-that-sound/">project page</a>
+                                &nbsp;&middot;&nbsp;
+                                <a href="https://arxiv.org/abs/2405.12221">paper</a>
+                                &nbsp;&middot;&nbsp;
+                                <a href="https://github.com/IFICL/images-that-sound">code</a>
+                                &nbsp;&middot;&nbsp;
+                                <a href="https://ificl.github.io/images-that-sound/#BibTeX" target="_blank">bibtex</a>
+                            </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" name="real-acoustic-fields" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href="https://arxiv.org/abs/2403.18821"><img src="images/projects/RAF.jpg" alt="" style="width: 100%;  border-radius: 10px;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold">
+                                Real Acoustic Fields: An Audio-Visual Room Acoustics Dataset and Benchmark</span><br>
+        
+                            Ziyang Chen,
+                            <a href="https://scholar.google.it/citations?user=5RFgT84AAAAJ&hl=en">Israel D. Gebru</a>,
+                            <a href="https://richardt.name/">Christian Richardt</a>,
+                            <a href="https://anuragkr90.github.io/">Anurag Kumar</a>,
+                            <a href="https://www.linkedin.com/in/wlaney/">William Laney</a>,
+                            <a href="http://andrewowens.com/">Andrew Owens</a>,
+                            <a href="https://alexanderrichard.github.io/">Alexander Richard</a>
+                            <br>
+                            CVPR 2024 (<span style="color:#a00"><b>Highlight -- 2.8% accept rate</b></span>)
+                            <br>
+                            <a href="https://facebookresearch.github.io/real-acoustic-fields/">project page</a>
+                                        &nbsp;&middot;&nbsp;
+                                        <a href="https://arxiv.org/abs/2403.18821">paper</a>
+                                        &nbsp;&middot;&nbsp;
+                                        <a href="https://github.com/facebookresearch/real-acoustic-fields/">dataset</a>
+                                        &nbsp;&middot;&nbsp;
+                                        <a href="https://facebookresearch.github.io/real-acoustic-fields/#BibTeX" target="_blank">bibtex</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row" name="UniTouch" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms" 
+                style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href="https://arxiv.org/abs/2401.18084"><img src="images/projects/unitouch.jpg" alt="" style="width: 100%;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold"> Binding Touch to
+                                Everything: Learning Unified Multimodal Tactile Representations </span><br>
+        
+                            <a href="https://fredfyyang.github.io/">Fengyu Yang</a>*,
+                            <a href="https://cfeng16.github.io/">Chao Feng</a>*,
+                            Ziyang Chen*,
+                            ...... ,
+                            <a href="http://andrewowens.com/">Andrew Owens</a>,
+                            <a href="https://vision.cs.yale.edu/members/alex-wong.html">Alex Wong</a>
+                            <br>
+                            CVPR 2024
+                            <br>
+                            <a href="https://cfeng16.github.io/UniTouch/">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://arxiv.org/abs/2401.18084">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://github.com/cfeng16/UniTouch">code</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://cfeng16.github.io/UniTouch/#BibTeX" target="_blank">bibtex</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            
+            
+            
+
+            <div class="row" name="SLfM" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href="https://arxiv.org/abs/2303.11329"><img src="images/projects/SLfM.jpg" alt="" style="width: 80%;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold"> Sound Localization from Motion: Jointly Learning Sound Direction and Camera Rotation</span><br>
+                            
+                            Ziyang Chen, <a href="https://jasonqsy.github.io/">Shengyi Qian</a>, <a
+                                href="http://andrewowens.com/">Andrew Owens</a><br>
+                            ICCV 2023
+                            <br>
+                            <a href="https://ificl.github.io/SLfM/">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://arxiv.org/abs/2303.11329">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://github.com/IFICL/SLfM">code</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://ificl.github.io/SLfM/#BibTeX" target="_blank">bibtex</a>
+                            <br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" name="condfoleygen" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href="https://arxiv.org/abs/2304.08490"><img src="images/projects/condfoleygen.jpg" alt="" style="width: 100%; margin-top: 5px;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold">Conditional Generation of Audio from Video via Foley Analogies</span><br>
+
+                            <a href="https://xypb.github.io/">Yuexi Du</a>, Ziyang Chen, <a href="https://www.justinsalamon.com/">Justin Salamon</a>, <a href="https://bryanrussell.org/">Bryan Russell</a>, <a href="http://andrewowens.com/">Andrew Owens</a><br>
+                            
+                            CVPR 2023
+                            <br>
+                            <a href="https://xypb.github.io/CondFoleyGen/">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://arxiv.org/abs/2304.08490">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://github.com/XYPB/CondFoleyGen">code</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://xypb.github.io/CondFoleyGen/docs/bibtex.txt">bibtex</a>
+                            <br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row" name="avforensics" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href="https://arxiv.org/abs/2301.01767"><img src="images/projects/avforensics.jpg" alt="" style="width: 60%;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold">Self-Supervised Video Forensics by Audio-Visual Anomaly Detection</span><br>
+
+                            <a href="https://cfeng16.github.io/">Chao Feng</a>, Ziyang Chen, <a href="http://andrewowens.com/">Andrew Owens</a><br>
+                            CVPR 2023 (<span style="color:#a00"><b>Highlight -- 2.5% accept rate</b></span>)
+                            <br>
+                            <a href="https://cfeng16.github.io/audio-visual-forensics/">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://arxiv.org/abs/2301.01767">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://github.com/cfeng16/audio-visual-forensics">code</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://cfeng16.github.io/audio-visual-forensics/docs/bibtex.txt">bibtex</a>
+                            <br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row" name="stereocrw" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href="https://arxiv.org/abs/2204.12489"><img src="images/projects/stereocrw.jpg" alt="" style="width: 100%;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold">Sound Localization by Self-Supervised Time Delay Estimation</span><br>
+                            
+                            Ziyang Chen, <a href="https://web.eecs.umich.edu/~fouhey/">David F. Fouhey</a>, <a
+                                href="http://andrewowens.com/">Andrew Owens</a><br>
+                            
+                            ECCV 2022
+                            <br>
+                            <a href="https://ificl.github.io/stereocrw/">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://arxiv.org/abs/2204.12489">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://www.dropbox.com/s/mn7b884xlmsu213/Stereocrw-public.key?dl=0">slides</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://github.com/IFICL/stereocrw">code</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://ificl.github.io/stereocrw/docs/bibtex.txt">bibtex</a>
+                            <br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="row" name="mix-and-localize" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href="https://arxiv.org/abs/2211.15058"><img src="images/projects/mixcrw.jpg" alt="" style="width: 100%;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold">Mix and Localize: Localizing Sound Sources in Mixtures</span><br>
+                            <a href="https://hxixixh.github.io/">Xixi Hu</a>*, Ziyang Chen*, <a
+                                href="http://andrewowens.com/">Andrew Owens</a><br>
+                            
+                            CVPR 2022
+                            <br>
+                            <a href="https://hxixixh.github.io/mix-and-localize/">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://arxiv.org/abs/2211.15058">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://www.dropbox.com/sh/858ju9bn2q4avsd/AAB3wrj8506sKmERUzjW0d7Za?dl=0">slides</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://github.com/hxixixh/mix-and-localize">code</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://hxixixh.github.io/mix-and-localize/docs/bibtex.txt">bibtex</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="row" name="structure-from-silence" style="margin-bottom: 20px;">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <div class="col-md-5 col-sm-5" align="center">
+                        <a href="https://arxiv.org/abs/2111.05846"><img src="images/projects/sfs.jpg" alt="" style="width: 100%;"></a>
+                    </div>
+                    <div class="col-md-7 col-sm-7">
+                        <p>
+                            <span class="mybold">Structure from Silence: Learning Scene Structure from Ambient Sound</span>
+                            <br>
+                            Ziyang Chen*, <a href="https://hxixixh.github.io/">Xixi Hu</a>*, <a href="http://andrewowens.com/">Andrew Owens</a><br>
+                            
+                            CoRL 2021 (<span style="color:#a00"><b>Oral</b></span>)
+                            <br>
+                            <a href="https://ificl.github.io/structure-from-silence/">project page</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://arxiv.org/abs/2111.05846">paper</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://drive.google.com/drive/folders/1xjgSDOvKm21oZvLDjerD9uSl2rZ_vzbl?usp=sharing">slides</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://github.com/IFICL/structure-from-silence">code</a>
+                            &nbsp;&middot;&nbsp;
+                            <a href="https://ificl.github.io/structure-from-silence/docs/bibtex.txt">bibtex</a> 
+                            <br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        
+        </div>
+    </section>
+    <br>
+    <hr>
+
+    <section id="Profession" style="padding-top: 40px; margin-top: -60px;">
+        <div class="container">
+            <div class="row">
+                <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms
+                    style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
+                    <h2>
+                        Profession
+                    </h2>
+
+                    <h4>Workshop Organizer:</h4>
+                    <ul>
+                        <li>ICCV 2025 Workshop: <a href="https://gen4avc.github.io/">Generative AI for Audio-Visual Content Creation</a> (Co-organizer)</li>
+                        <li>CVPR 2025 Workshop: <a href="https://sightsound.org/">Sight and Sound</a> (Co-organizer)</li>
+                        <li>CVPR 2024 Workshop: <a href=https://sightsound.org/2024/>Sight and Sound</a> (Co-organizer)</li>
+                    </ul>
+
+                    <h4>Reviewer:</h4>
+                    <ul>
+                        <li>
+                            Conference: WACV 2023, CVPR 2023, ICCV 2023, CVPR 2024, SIGGRAPH 2024, ECCV 2024, NeurIPS 2024, CVPR 2025, ICCV 2025
+                        </li>
+                        <li>
+                            Journal: IJCV
+                        </li>
+                    </ul>
+                    <br>
+
+                    <h4>Teaching Assistant:</h4>
+                    <ul>
+                        <li>VE312 Digital Integrated Circuits, Fall 2018, UM-SJTU Joint Institute. With <a
+                                href="https://www.ji.sjtu.edu.cn/about/faculty-staff/faculty-directory/faculty-detail/86/">Yaping
+                                Dan</a>.</li>
+                        <li>VE311 Electronic Circuits, Summer 2019, UM-SJTU Joint Institute. With <a
+                                href="https://www.ji.sjtu.edu.cn/about/faculty-staff/faculty-directory/faculty-detail/126/">Chang-Ching
+                                Tu</a>.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    <hr>
+
+        <!--
+            ==================================================
+            Portfolio Section Start
+            ================================================== -->
+        <!--
+            ==================================================
+            Call To Action Section Start
+            ================================================== -->
+
+        <!-- 
+        ================================================== 
+            Company Feature Section Start
+        ================================================== -->
+        <!-- <section class="company-description" style="background: #02BDD5;color:white;"> -->
+
+
+
+        <!--
+            ==================================================
+            Footer Section Start
+            ================================================== -->
+        <footer id="footer">
+                <div class="container">
+                    <div class="col-md-8">
+                        <p class="copyright">Copyright © 2025 @ Ziyang Chen ---- Thanks my friends <a href="https://jinlinyi.github.io/">Linyi Jin</a> and <a href="https://jasonqsy.github.io/">Shengyi Qian</a> for their website templates. <br>
+                        <a href="https://www.flaticon.com/free-icons/new" title="new icons">New icons created by Pixel perfect - Flaticon</a></p>
+                    </div>
+                </div>
         </footer>
-    </div>
+
 </body>
+
 </html>
