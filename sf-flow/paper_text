@@ -1,0 +1,363 @@
+% Template for ICASSP-2026 paper; to be used with:
+%          spconf.sty  - ICASSP/ICIP LaTeX style file, and
+%          IEEEbib.bst - IEEE bibliography style file.
+% --------------------------------------------------------------------------
+\documentclass{article}
+\usepackage{spconf,amsmath,graphicx,hyperref,amsfonts, booktabs,multirow,bm,cleveref,siunitx}
+\usepackage[export]{adjustbox}
+\usepackage{cite}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{SF-Flow: Sound field magnitude estimation via flow matching\\guided by sparse measurements}
+
+\name{Ege Erdem$^{1, 2}$ \sthanks{* Work performed during E. Erdem's internship at NII.
+} \qquad Shoichi Koyama$^{2}$ \qquad Tomohiko Nakamura$^{3}$  \qquad Zoran Cvetkovi\'c$^{1}$}
+  
+  \address{$^{1}$ King's College London, London, UK \quad
+      $^{2}$National Institute of Informatics, Tokyo, Japan\\
+    $^{3}$National Institute of Advanced Industrial Science and Technology, Tokyo, Japan
+    \thanks{This work was partly supported by JSPS KAKENHI 23K24864 and JST FOREST Program under Grant Number JPMJFR216M.}
+    }
+
+\begin{document}
+\ninept
+%
+\maketitle
+
+\begin{abstract}
+Reconstructing 3D sound field from sparse microphone measurements is a fundamental yet ill-posed problem. We address this challenge through Acoustic Transfer Function (ATF) magnitude estimation, which encapsulates key perceptual and acoustic properties of a physical space and is used in enhancement, rendering, and characterization tasks. Although recent generative paradigms such as Flow Matching (FM) have achieved state-of-the-art performance in speech and music generation, their potential in spatial audio remains unexplored. We propose a novel framework for 3D ATF magnitude reconstruction in the modal frequency range as a conditional generation task, with a 3D U-Net conditioned by a permutation-invariant set encoder. This architecture enables reconstruction from an arbitrary number of sparse inputs while leveraging the stable and efficient training properties of FM. Experimental results demonstrate that the proposed method achieves accurate reconstruction in the modal frequency range, while training remains efficient and scalable.
+\end{abstract}
+
+%In a data-limited setting; straightforward conditioning, simpler model architectures, and forgoing Classifier-free Guidance (CFG) consistently outperform their more complex counterparts, offering important hints for the adaptation of advanced generative techniques to spatial audio and room acoustics tasks.
+
+\begin{keywords}
+sound field reconstruction, flow matching, interpolation, spatial audio, generative model
+\end{keywords}
+
+\vspace{-6pt}
+\section{Introduction}
+\label{sec:intro}
+\vspace{-6pt}
+
+The reconstruction of acoustic fields from sparse measurements is a central challenge in spatial audio. This task typically relies on Room Impulse Responses (RIRs) or Acoustic Transfer Functions (ATFs), which act as acoustical fingerprints of an environment and are essential for applications ranging from room acoustics analysis to real-time immersive audio in AR/VR~\cite{Betlehem:IEEE_M_SP2015,Ueno:FnT_SP2025}.
+However, the strong dependence of sound propagation on frequency, spatial configuration, and temporal factors makes the estimation of a complete sound field from only a few microphone recordings particularly challenging.
+
+Although the ATF is inherently complex-valued, its magnitude alone captures perceptually and functionally relevant properties of the sound field, including modal resonances, spectral coloration, and frequency-dependent energy decay~\cite{Kuttruff:RoomAcoust}. 
+Consequently, magnitude-only reconstruction serves as a valuable approach in tasks where phase is either highly variable, unreliable, or of secondary importance; for example, room characterization, source placement optimization, speech dereverberation, and data augmentation for audio generation systems~\cite{Lluis:JASA2020,Liang:EURASIP2024,miotelloicassp24,Koyama:ForumAcusticum2025, genda_lin25}. This is particularly relevant for unsynchronized or independently operating sensors, where precise phase information is often unavailable while magnitude statistics remain meaningful. In spatial audio rendering, magnitude representations can support certain energy-based components of perceptually informed SRIR interpolation~\cite{McKenzie2022Perceptually}, while accurate phase reconstruction remains a distinct challenge.
+For these reasons, ATF magnitude estimation has emerged as a tractable and practically relevant alternative to full complex field modeling.
+Prior works focus on estimating the complex amplitude distribution in the frequency domain based purely on underlying physics principles~\cite{Williams:FourierAcoust}. The sound field is approximated by projections onto a set of spatial basis functions, such as plane wave functions, spherical wave functions, or equivalent sources~\cite{Colton:InvAcoust_2013,Ueno:FnT_SP2025}. 
+By determining the expansion coefficients as least-squares solutions, estimation is performed under the constraint that they satisfy the Helmholtz equation, which is a governing equation of acoustic fields.
+Basis-expansion methods have evolved into approaches relying on sparse representations~\cite{ege23, Koyama2019Sparse} and kernel regression with the constraint of the Helmholtz equation~\cite{Ueno:IEEE_J_SP2021}.
+
+Since the conventional methods described above suffer from significant performance degradation when the sensor configuration is highly sparse, learning-based approaches utilizing neural networks have attracted attention in recent years~\cite{Koyama:IEEE_M_SP2025}. 
+Their basis can be broadly classified into feedforward neural networks, including autoencoders~\cite{Lluis:JASA2020,Koyama:ForumAcusticum2025}, implicit neural representation or neural field, including Physics-Informed Neural Networks (PINN)~\cite{lnaf, Ribeiro:IEEE_ACM_J_ASLP2024, Olivieri:EURASIP2024}, and generative models~\cite{efren2023gan,  antonFastRIR22, miotelloicassp24, diffusionrir}. 
+Generative models proved effective in several inverse problems~\cite{elio23}, and for sound field estimation problem, methods based on Generative Adversarial Networks (GANs)~\cite{efren2023gan,  antonFastRIR22} and Denoising Diffusion Probabilistic Models (DDPMs)~\cite{miotelloicassp24, diffusionrir} were proposed. \cite{Arellano2025:WASPAA2025} compares multiple generative paradigms, including FM, for perceptual RIR generation from acoustic descriptors, addressing a creative synthesis problem rather than physical RIR reconstruction.
+The most methodologically related work to ours, \cite{miotelloicassp24}, adapts DDPM-based image inpainting to reconstruct the 2D magnitude distributions
+but is restricted to planar slices and relatively dense arrays ($\ge$ 64 microphones). For 3D ATF magnitude reconstruction, the autoencoder conditioned on source and sensor positions is proposed in \cite{Koyama:ForumAcusticum2025}. 
+The latent variables are aggregated to obtain prototypes independent of microphone positions. 
+%These limitations motivate exploring alternative generative paradigms. In the following section, we introduce Flow Matching (FM) and show how it can be applied to the sound field magnitude estimation.
+% Recently emerged learning-based can be broadly classified into Physics-Informed Neural Networks (PINNs, PIMLs) \cite{Koyama:IEEE_M_SP2025}, 
+% Neural Acoustic Fields (NAFs) \cite{lnaf},  and the generative models like Diffusion \cite{diffusionrir, miotelloicassp24, elio23} and Generative Adversarial Networks (GANs) \cite{efren2023gan, zenofon23gan, antonFastRIR22}. 
+% These works propose solutions for introducing physics-based losses into the learning procedure, creating continuous acoustic representations, RIR generation and inpainting, and ATF magnitude estimation. 
+% After the recognized difficulty of training GANs, deep learning research has shifted towards the recent cutting-edge frameworks Denoising Diffusion Probability Models (DDPMs) \cite{Song2020ScoreBasedGM, ddpm} and Flow Matching (FM) \cite{lipman2023flow, liu_rectFM22}; mainly for their training stability and high-quality synthesis. These methods achieved state-of-the-art in image (Stable Diffusion 3), video (Meta's MovieGen) and biological generations (DeepMind's AlphaFold). This success has rapidly translated to the sound and speech processing domains, adapting FM for text-to-speech synthesis \cite{matcha}, text-to-audio generation \cite{lafmaguan2024}, and sound \cite{flowsep25_plumbey} and source separation \cite{FLOSS25:WASPAA2025}.
+% FM offers the flexibility to use arbitrary probability paths and initial distributions, while DDPMs are only suitable for Gaussians. FM proved to provide faster, simpler, and more elegant training procedure compared to DDPMs.
+% The most direct prior work by \cite{Koyama:ForumAcusticum2025} addressed the exact problem using a conditioned autoencoder. 
+% Their model encodes sparse measurements into a latent space and aggregates them into a position-independent representation, which is then decoded to estimate magnitudes at arbitrary locations,
+% conditioned by receiver and source coordinates and frequency. This approach established a key benchmark for learning-based 3D magnitude estimation from very sparse input.
+% While no paper was found that explicitly applies FM to sound field reconstruction problems yet, the work most methodologically related to ours, 
+% Miotello et al. \cite{miotelloicassp24} adapted a 2D image inpainting DDPM to reconstruct the sound field magnitude on a 2D plane (SF-Diff), paving the way for application of probabilistic models to our domain. 
+% While effective, our work takes a different path and addresses several of its limitations. 
+% SF-Diff operates on independent 2D slices of the sound field, potentially missing valuable spatial correlations. % whereas our framework is designed to reconstruct the full 3D volume directly. 
+% SF-Diff is conditioned by masking unknown locations with injected noise, treating the task as an inpainting problem, evaluated on setups with a minimum of 64 microphones (6.25\% of the total field). 
+% In contrast, our proposed framework reconstructs the full 3D volume, uses a flexible permutation-invariant set encoder for conditioning without altering the input, and is specifically designed and tested for highly sparse scenarios starting from as few as 5 microphones (0.004\%).
+
+In this paper, we introduce \textit{SF-Flow}, a 3D sound field magnitude estimation method built on Flow Matching (FM). 
+FM offers several advantages for this task: simulation-free training, fast inference, stable dynamics, and the flexibility to use optimized probability paths, making it a compelling candidate for modeling complex, high-dimensional sound fields. Although FM achieves state-of-the-art performance in image synthesis~\cite{Esser2024SD3}, speech~\cite{Mehta2023MatchaTTSAF}, and music generation~\cite{Evans2024StableAudio}, its unexplored potential in spatial audio further motivates this study.
+To our knowledge, this paper is the first to apply FM to 3D sound field magnitude estimation. Our key contributions are as follows:
+(1) we frame 3D sound field magnitude reconstruction as a conditional (guided) generation problem solved with FM;
+(2) we introduce a permutation-invariant set encoder that conditions the generation on an arbitrary number and configuration of sparse microphone measurements;
+(3) we provide initial insights into the impact of dataset scaling in this data-limited application domain.
+
+
+\vspace{-6pt}
+\section{Proposed Method}
+\vspace{-6pt}
+
+\subsection{Problem Statement}
+\vspace{-4pt}
+
+The ATF, the RIR frequency domain representation, denoted by $H(\mathbf{p}_{\text{src}}, \mathbf{p}_{\text{mic}}, f)$, is a complex-valued function that describes the acoustic response between a source position $\mathbf{p}_{\text{src}}$ and a microphone position $\mathbf{p}_{\text{mic}}$ at a specific frequency $f$. Its magnitude, $|H(\cdot)|$, captures the frequency-dependent effect of the room on the sound field amplitude. For perceptual relevance and common practices, we express the ATF magnitude in a logarithmic decibel (dB) scale.
+
+The general problem of sound field magnitude estimation is to reconstruct the ATF magnitude distribution within a target region from a limited number of microphone measurements.
+Specifically, the objective is to estimate a dense volumetric 3D sound field magnitude from sparse measurements.
+We denote the target discretized ATF magnitude as a tensor $\mathbf{H} \in \mathbb{R}^{F \times D \times H \times W}$, where $F$ is the number of frequency bins and $D \times H \times W$ defines the spatial grid for a fixed source position.
+
+The available data are given as a sparse, variable and unordered set of $M$ observations, $\mathcal{C} = \{(\mathbf{p}_i, \mathbf{m}_i)\}_{i=1}^{M}$, where each entry contains the relative 3D coordinate $\mathbf{p}_i \in \mathbb{R}^3$ of the $i$-th microphone with respect to the source and its corresponding $F$-dimensional ATF magnitude vector $\mathbf{m}_i \in \mathbb{R}^F$.
+The goal of this problem is to estimate a complete 3D ATF magnitude cube $\hat{\mathbf{H}}$ from $\mathcal{C}$ such that $\hat{\mathbf{H}}$ accurately approximates the ground truth $\mathbf{H}$ over the target region.
+
+Conventional learning-based approaches typically formulate sound field magnitude estimation as a regression problem, directly mapping sparse microphone inputs to dense field predictions. 
+In this work, we instead adopt a generative perspective, aiming to model the distribution of plausible 3D ATF magnitudes and guide the generation process using sparse microphone measurements. This formulation naturally aligns with FM, which provides an efficient generative framework for learning and sampling from complex data distributions.
+
+\vspace{-4pt}
+\subsection{Flow Matching for Sound Field Magnitude Estimation}
+\vspace{-4pt}
+
+We formulate 3D ATF magnitude reconstruction as a conditional generation problem addressed with FM, following \cite{MIT25} for notation and definitions. FM learns to transform samples from a simple prior distribution, $p_{\text{init}}$, into samples from the target data distribution $p_{\text{data}}$, where $p_{\text{data}}$ denotes the distribution of simulated 3D ATF magnitude cubes $\mathbf{H} \in \mathbb{R}^{F \times D \times H \times W}$ for each source position. The prior distribution $p_{\text{init}}$ is taken to be a standard Gaussian distribution of the same dimensionality. 
+
+%FM trains a neural network that approximates a differential equation whose solution generates trajectories that follow the desired probability path, transforming an initial distribution $p_{\text{init}}$, into complex distribution of the target data, $p_{\text{data}}$. This transformation is described by trajectory of samples, $X_t$, evolving from time $t = 0$ to $t = 1$. The trajectory's dynamics are governed by an ODE, 
+%defined by a time-dependent vector field $\mathbf{u}: 
+%\mathbb{R}^3 \times [0,1] \to \mathbb{R}^3$, which specifies a velocity
+%for any sample $\mathbf{x} \in \mathbb{R}^3$ at any time $t \in [0,1]$:
+
+This transformation is modeled as a continuous-time process where the intermediate sample $\mathbf{X}_t$ evolves from $t=0$ to $t=1$. Here, $X_0 \sim p_{init}$ is the initial random Gaussian noise cube and $X_1 \approx H$ is the terminal point of the trajectory which is a physically plausible valid ATF magnitude cube from $p_{data}$. The dynamics of this evolution are governed by an Ordinary Differential Equation (ODE) defined by a time-dependent vector field $u_t$:
+\begin{equation} 
+\label{eq:ode}
+\frac{d}{dt}\mathbf{X}_t = u_t(\mathbf{X}_t) \quad \quad \mathbf{X}_0 \sim p_{\text{init}}
+\end{equation}
+
+The solution of this ODE defines a \textit{flow}, a function that maps noise samples to data,i.e, $\mathbf{X}_t =\psi_t(\mathbf{X}_0)$, 
+
+%an initial random noise cube $\mathbf{X}_0$ to its intermediate points $\mathbf{X}_t$ and finally to the terminal point of the trajectory, $\mathbf{X}_1$, which corresponds to a physically plausible ATF magnitude cube. 
+Intuitively, the flow induced by $u_t$ describes how the entire noise space is transported towards the data manifold of valid sound fields.
+Thus, the problem of sound field magnitude estimation reduces to training a neural network ${u}_t^\theta(\cdot|\mathcal{C})$ that parametrizes this vector field, conditioned on the sparse set of microphone measurements $\mathcal{C}$.
+
+The ideal training objective would be to minimize the mean squared error between the network's predicted vector field $u_{t}^{\theta}(x)$ and the true  marginal vector field $u_{t}^{\text{target}}(x)$.
+However, the marginal vector field is intractable to compute because it requires integrating over the entire unknown data distribution. 
+FM addresses this issue by replacing the marginal objective with a regression against the tractable conditional vector field $u_{t}^{\text{target}}(x|z)$, where $z \sim p_{\text{data}}$ denotes a single ground-truth ATF cube from the training set. Minimizing this Conditional FM (CFM) loss has been proven to be equivalent to minimizing the intractable marginal loss due to shared gradients \cite{lipman2023flow}:
+\begin{equation}
+ \mathcal{L}_{\text{CFM}}(\theta) = \mathbb{E}_{t \sim \text{Unif}, z \sim p_{\text{data}}, x \sim p_t(\cdot|z)} [\|u_{t}^{\theta}(x) - u_{t}^{\text{target}}(x|z)\|^2], 
+\label{lcfm}
+\end{equation}
+where the conditional Gaussian vector field is given by \cite{MIT25}:
+\begin{equation}
+u_t^{\text{target}}(x|z) = \left( \dot{\alpha}_t - \frac{\dot{\beta}_t}{\beta_t} \alpha_t \right) z + \frac{\dot{\beta}_t}{\beta_t} x
+\label{eq:cond_vect_field}
+\end{equation}
+%The functions $\alpha_t$ and ${\beta_t}$ are analogous to the noise schedulers in diffusion models and can be chosen flexibly among many alternative paths \cite{MetaFM}. 
+A particularly elegant and effective choice is the linear Gaussian Optimal Transport (OT) path~\cite{MetaFM} with $\alpha_t=t$ and $\beta_t=1-t$, 
+which linearly interpolates a data sample $z \sim p_{\text{data}}$ and a noise sample $\epsilon \sim \mathcal{N}(0, I)$ as $x_t = \alpha_t z + \beta_t \epsilon$.
+Substituting this path into \eqref{eq:cond_vect_field} yields a constant conditional vector field that simplifies the training objective:
+\begin{equation}
+u_t^{\text{target}}(x_t|z) = z - \epsilon.
+\end{equation}
+In this formulation, unlike diffusion-based models that learns a complex time-dependent velocity, the network only needs to regress the difference between a ground-truth ATF cube and its corresponding noise sample.
+Accordingly, the CFM loss \eqref{lcfm} reduces to:
+%\begin{equation}
+%\label{lcfm_ot}
+% \mathcal{L}_{\text{OT-CFM}}(\theta) = \mathbf{E}_{t,z,\epsilon} [\|u_{t}^{\theta}(t\cdot z+(1-t)\cdot \epsilon ) - (z-\epsilon)\|^2] 
+%\end{equation}
+\begin{equation}
+\label{lcfm_ot}
+\mathcal{L}_{\text{OT-CFM}}(\theta) = 
+\mathbb{E}_{t,z,\epsilon} \big[\|u_{t}^{\theta}(x_t|\mathcal{C}) - (z-\epsilon)\|^2\big].
+\end{equation}
+%and $p_t{(x|z)} \sim \mathcal{N}(tz, (1-t)^2)$ referred as conditional optimal transport probability. 
+This simplified and stable objective is a key factor behind the framework's fast convergence and its ability to generate high quality samples with only a few inference steps. Note that the FM framework specifies only the training objective and the target vector field, while imposing no restrictions on the architecture of the neural network used to predict $u_{t}^{\theta}$.
+The details of our network architecture will be shown in \Cref{sec:gen_model}.
+
+
+\begin{algorithm}[t]
+\caption{Training procedure for SF-Flow}
+\label{pseudo}
+\begin{algorithmic}[1]
+\Require Dataset of 3D ATF cubes $z \sim p_{\text{data}}$, neural network model $u_t^\theta$
+\For{each mini-batch}
+  \State Sample a ground-truth ATF cube $z \sim \mathcal{D}$
+  \State Sample a random time $t \sim \mathrm{Unif}(0,1)$
+  % \State Sample noise $\epsilon \sim \mathcal{N}(0, I)^{F \times D \times H \times W}$
+  \State Sample noise $\epsilon \sim \mathcal{N}(0, I)$
+  \State Set $x_t = t z + (1 - t)\epsilon$ \hfill (Gaussian OT path)
+  \State Sample observation count $M \sim \mathrm{Unif}(5, M_{\max})$
+  \State Form sparse measurement set $\mathcal{C}$ by randomly selecting $M$ positions and their corresponding magnitudes from $z$
+  \State Compute loss: $\mathcal{L}(\theta) = \|u_t^\theta(x_t, \mathcal{C}) - (z - \epsilon)\|_2^2$
+  \State Update $\theta$ via gradient descent
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\vspace{-4pt}
+\subsection{Conditioning Encoder}
+\label{sec:enc}
+\vspace{-4pt}
+
+To condition the generative process on the unordered and variable-sized set $\mathcal{C}$, 
+we employ a permutation-invariant set encoder based on the Transformer architecture. Each observation consists of a relative microphone coordinate $\mathbf{p}_i \in \mathbb{R}^3$ 
+and its corresponding ATF magnitude vector $\mathbf{m}_i \in \mathbb{R}^F$, with $F=20$ frequency bins. The coordinate and magnitude vectors are concatenated into a $3+F=23$-dimensional input, which is projected into a $d_{\text{model}}=512$-dimensional token through an MLP. 
+A three-layer Transformer encoder with $n_{\text{head}}=8$ attention heads then processes these tokens to capture interactions among observations. 
+To accommodate variable set sizes, a learned null token with masking is introduced, ensuring the padded slots are ignored. 
+The encoder produces a sequence of contextualized tokens that provide localized, spatially aware conditioning fed to the U-Net.
+
+\vspace{-4pt}
+\subsection{Network Architecture} \label{sec:gen_model}
+\vspace{-4pt}
+
+The generative model is a 3D U-Net architecture adapted from a standard 2D U-Net for image generation \cite{MIT25}, extended to handle volumetric inputs. The network maps an input cube $\mathbf{X}_t \in \mathbb{R}^{F \times 11 \times 11 \times 11}$, with $F=20$ frequency channels, to an output of identical shape. 
+
+The U-Net encoder consists of four convolutional stages with channel sizes $\{32, 64, 128, 256\}$.
+Each stage applies a $3 \times 3 \times 3$ convolutional layer, group normalization, and SiLU activation, followed by $2\times$ spatial down-sampling.
+At every encoder stage, a cross-attention block allows the 3D spatial features to attend to the conditioning tokens produced by the set encoder (\Cref{sec:enc}). 
+The resulting features are stored via skip connections for use in the decoder. The decoder mirrors the encoder with three up-sampling stages implemented by transposed convolutional layers, concatenated with the corresponding skip connections. Finally, a $1 \times 1 \times 1$ convolution maps back to $F=20$ output channels. 
+Since the input cube size (11) is not divisible by the down-sampling factor, 
+reflective padding is applied at the network input and cropped back at the output to recover the original $11 \times 11 \times 11$ resolution.
+
+%The U-Net follows a standard encoder-decoder design with skip connections, while cross-attention modules provide conditioning on the sparse observation tokens.
+
+%At each upsampling stage of the decoder, the spatial feature map serves as the query, while the contextualized tokens from the encoder,serve as the keys and values. 
+%This allows the model to spatially "look up" the most relevant information from the sparse microphone set when reconstructing a specific region of the sound field. 
+
+\vspace{-6pt}
+\section{Experiments}
+\label{sec:eval}
+\vspace{-6pt}
+
+\subsection{Experimental Setup} \label{sec:exp_setup}
+\vspace{-4pt}
+
+We simulated RIRs using the \texttt{pyroomacoustics} library~\cite{PRA_Scheibler_2018} for a single room of dimensions \SI{4}{\meter}$\times$\SI{6}{\meter}$\times$\SI{3}{\meter}, with a fixed reverberation time (T60) of \SI{0.2}{\second}.
+In each simulation, a sound source was placed at a random position. 
+The ground-truth sound field was represented by a 3D ATF magnitude cube, sampled at 1331 microphone positions on a uniform $11\times11\times11$ grid (\SI{0.1}{\meter} spacing) located in a central \SI{1}{\meter^3} target region.
+The signals were recorded at a sampling rate of \SI{2000}{\hertz}, truncated to 128 samples, and converted to ATF magnitudes via the Fourier transform. 
+The dataset comprised 1024 unique source positions, which were split into 820 for training, 102 for validation, and 102 for testing.
+
+For each batch item, we independently sample the number of measurements $M$ from a uniform distribution between 5 and $M_{max}=50$, and then draw $M$ distinct microphone indices without replacement from the full set of 1331 receiver positions. 
+The conditioning set $\mathcal{C}=\{(\mathbf{p}_i,\mathbf{m}_i)\}_{i=1}^M$ is formed by pairing each selected receiver’s coordinate $\mathbf{p}_i \in \mathbb{R}^3$ (expressed relative to the source position) with its corresponding ATF-magnitude vector $\mathbf{m}_i \in \mathbb{R}^F$. 
+We pad to $M_{\max}$ with a mask for the set encoder. Validation follows the same randomized procedure to avoid bias toward any fixed microphone pattern. The training procedure shown in Algorithm~\ref{pseudo}.
+
+SF-Flow was trained for 1,400 epochs ($\sim$300k iterations) with a batch size of 4 on a single NVIDIA RTX A6000 Ada GPUs. We used a learning rate schedule with a linear warm-up from $1 \times 10^{-6}$ to $1 \times 10^{-4}$ over the first 5{,}000 iterations, followed by cosine decay. 
+
+As a second comparison, we implemented the \textit{AE} baseline~\cite{Koyama:ForumAcusticum2025},
+a conditioned autoencoder that encodes sparse observations into a latent representation and decodes them into dense ATF magnitudes. 
+The AE is trained with discrete observation counts, where $M$ is uniformly sampled from $\{5,10,20,50\}$, due to specific architecture requirements. 
+As in the original implementation~\cite{Koyama:ForumAcusticum2025}, validation loss only uses $M=5$ observations to improve accuracy in the most sparse scenario.
+The AE directly uses log-spectral distortion (LSD) as the training loss.
+It was trained for 1,400 epochs, but with a batch size of 1 on a single NVIDIA RTX A6000 Ada GPU. A step-wise learning rate schedule was applied, with decays from $1 \times 10^{-3}$ to $1 \times 10^{-4}$ and $1 \times 10^{-5}$ at epochs 800 and 1,200, respectively.
+% Each epoch required approximately $\sim$21 seconds, with the best model achieved at epoch 802 ($\sim$\SI{4.7}{\hour}).
+
+For these learning-based methods, the best-performing models were selected based on the lowest validation loss: 800 epoch for SF-flow and 802 epoch for the AE baseline.
+
+% We report per-epoch times and convergence epochs for clarity; as total wall-clock times are hardware- and batch-size-dependent and should be interpreted accordingly.
+
+As a third method, we implemented Kernel Ridge Regression (\textit{KRR}) from \cite{Koyama:ForumAcusticum2025}, which was evaluated under the same experimental setup.
+The KRR directly estimates the log-ATF magnitudes at target positions using the observed microphones in the test set. A Gaussian kernel with precision $10^{-2}$ with a regularization parameter of $10^{-3}$ was used since the Helmholtz constraint does not apply to magnitudes.
+
+\begin{table}[t]
+\centering
+\caption{Training time and Log-Spectral Distortion (LSD) of full 1331-microphone sound field cube reconstruction from $M=5$ random sparse observations, averaged over the 102 test sources.}
+\label{tab:lsd_results_ablation}
+\begin{tabular}{llc}
+\toprule
+\textbf{Method} & \textbf{Training Time} & \textbf{LSD (dB)} \\
+\midrule
+KRR    & - & $6.59 \pm 3.42$ \\
+AE & \SI{4.7}{\hour} (\SI{21}{\second/epoch}) & $2.69 \pm 1.22$ \\
+SF-Flow & \SI{42}{\min} (\SI{3.1}{\second/epoch}) & $2.86 \pm 1.26$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{figure*}[t]
+  \centering
+  % Top PDF
+  \includegraphics[width=0.9\textwidth,clip, trim=4cm 1.5cm 2cm 3.8cm]{im/f4_src0_z2.pdf}\\[0.5em]
+  % Bottom PDF
+  \includegraphics[width=0.9\textwidth,clip, trim=4cm 1.8cm 2cm 3.5cm]{im/15_src12.pdf}
+  \caption{Estimated ATF magnitudes at two horizontal slices: top row at z=-0.3 (78 Hz) bottom row at z=0m (250 Hz). 
+  A random source and random sparse (5) microphone configuration from the test set are shown. Overlapping markers indicate microphones sharing $(x,y)$ coordinates at different heights. Columns depict the corresponding ground truth field, and reconstructions by SF-Flow, AE, and KRR (left to right). Color bars are per-frequency row.}
+  \label{fig:sf_slices}
+\end{figure*}
+
+\begin{figure}[htb]
+  \centering
+  \centerline{\includegraphics[width=8.5cm]{im/ATF_comparison_src0922.pdf}}
+  \caption{Estimated ATF magnitude at the origin (center of the target region) with the first source of the test set, M = 5.}
+  \label{fig:atf_response}
+\end{figure}
+
+% \subsection{Results and Discussion}
+\vspace{-6pt}
+\subsection{Comparison with Sound Field Magnitude Estimation Methods}
+\label{results}
+\vspace{-4pt}
+
+\Cref{tab:lsd_results_ablation} shows the LSD results when reconstructing the full 3D ATF magnitudes from $M\!=\!5$ randomly selected microphones, 
+where $\text{LSD}\!=\!\tfrac{1}{N}\sum_{j=1}^{N}\sqrt{\tfrac{1}{F}\!\sum_{f=1}^F(\!\hat{H}\!_{f,j}-\!H\!_{f,j})^2}$ with $F\!=\!20$ frequency bins ($15$--$312.5$~\si{\hertz}) and $N=1331$ spatial positions, averaged over all test sources.
+
+%is the RMSE between estimated and ground-truth magnitudes 
+%The scores are averaged over all $F=20$ frequency bins of range $15$--$312.5$~\si{\hertz}.
+The AE baseline achieves the lowest mean LSD (\SI{2.69}{\decibel}), followed closely by the proposed SF-Flow (\SI{2.86}{\decibel}).
+Both methods clearly outperform KRR (\SI{6.59}{\decibel}), which does not leverage training data for training.
+The reported standard deviations show that SF-Flow attains performance comparable to AE across test cases.
+Importantly, SF-Flow reaches this level of accuracy with an averaged training time of only around \SI{42}{\min} (\SI{3.1}{\second} for each epoch) on the same device, compared with around \SI{4.7}{\hour} (\SI{21}{\second} for each epoch) required by AE, highlighting the efficiency of the proposed method in addition to its competitive reconstruction performance.
+% Importantly, SF-Flow reached this level of accuracy in about \SI{42}{\min} (\SI{21}{\second} per epoch), whereas AE required about \SI{4.7}{\hour} (\SI{3.1}{\second} per epoch). SF-Flow and AE trained on same GPU. Thus, although these times are not strictly comparable, they still suggest that SF-Flow can achieve accuracy comparable to AE with a more efficient training process.
+
+\Cref{fig:atf_response} shows an example of reconstructed ATF magnitudes at the receiver located at the origin, using $M=5$ random observations with the first test source $(-0.53,-1.22,-1.04)$.
+The AE baseline follows the ground truth very closely up to about \SI{110}{\hertz}.
+SF-Flow attains comparable accuracy overall, with a slightly deviation just below \SI{50}{\hertz}.
+KRR deviates more noticeably from the ground truth, with errors already apparent at lower frequencies. \Cref{fig:sf_slices} visualizes reconstructed sound field magnitudes for $F=78$ Hz and $F=250$ Hz. The top slice at $z=-0.3$ m is chosen near the bottom of the target cube, while the bottom slice corresponds to the cube center at $z=0$ m. 
+Both examples use a randomly selected source and sparse microphone configuration from the test set.  The columns show (1) sparse microphone positions (color indicates height), (2) ground-truth simulated field, (3) SF-Flow estimation, (4) AE, and (5) KRR. 
+
+SF-Flow and AE both recover the spatial structure of the sound field more faithfully than KRR, particularly at higher frequencies where aliasing artifacts are more pronounced. 
+Between the two learning-based approaches, SF-Flow occasionally exhibits patch-like discontinuities, whereas AE reconstructions are generally smoother.
+These tendencies are not systematic and can vary with the source position, the selection of sparse observations, the slice orientation, and the frequency. 
+For example, at $F=78$ Hz, SF-Flow greatly retains the general variation and the magnitude distribution of the field compared to AE, but with isolated non-uniformities in the magnitude pattern unlike the smoothness of AE. 
+At $F=250$ Hz, SF-Flow captures the large magnitude variation in the lower-right region of the target slice more effectively than AE, whereas AE better preserves the narrow central variation, with reduced spatial diffusion.
+
+For inference, we used only 10 ODE time steps per sample. This is substantially faster than diffusion-based approaches, which typically require hundreds of denoising iterations due to their SDE formulation and long forward diffusion schedules, in contrast to the short linear OT path in FM. FM’s deterministic ODE formulation allows efficient sampling with orders-of-magnitude fewer steps \cite{MetaFM}.
+
+\vspace{-6pt}
+\subsection{Data Scalability of Proposed SF-Flow}
+\vspace{-4pt}
+
+\begin{table}[t]
+\centering
+\caption{Log-Spectral Distortion (LSD) of SF-Flow reconstructions for varying numbers of sparse observations $M$, averaged over the 102 test sources. Results are shown for three training datasets (r1--r3), corresponding to increasingly larger training sets.}
+\label{tab:lsd_scaling}
+{
+\setlength{\tabcolsep}{3pt} % adjust column spacing
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Dataset} & \textit{M=5} & \textit{M=20} & \textit{M=50} \\
+\midrule
+r1 & $2.86 \pm 1.26$ & $2.72 \pm 1.21$ & $2.73 \pm 1.22$ \\
+r2 & $2.43 \pm 1.14$ & $2.14 \pm 1.03$ & $2.09 \pm 1.02$ \\
+r3 & $1.96 \pm 1.01$ & $1.76 \pm 1.92$ & $1.71 \pm 1.91$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+To analyze the effect of dataset size on SF-Flow method, we conducted an ablation study using two larger training sets, augmenting the original dataset of 1,024 source positions (r1) with additional simulations, creating total sizes of  4,096 (r2) and 8,192 (r3) source positions. 
+The validation and test sets remained identical across all experiments to ensure a fair comparison. The results of this scalability analysis are reported in Table \ref{tab:lsd_scaling}.
+In the r1 setting, the validation loss consistently plateaued around the reported best performance, and extensive tuning of hyperparameters, classifier-free guidance, or longer training runs did not yield further improvements. 
+Expanding the dataset to r3, however, reduced the mean LSD error from \SI{2.86}{\decibel} to \SI{1.96}{\decibel}, at the cost of additional \SI{2}{\hour} of training (using the same learning rate schedule extended to more epochs), highlighting that reconstruction accuracy is greatly affected by the available data.
+
+
+%As an architectural set encoder variant, we also evaluated a design where the position and magnitude embeddings are processed by separate MLPs and then added instead of concatenated as described in the adopted encoder architecture in \cite{sec:enc}. 
+%Addition imposes a stronger structural prior by forcing both modalities into a shared semantic space, whereas concatenation is a less restrictive approach that allows the model the flexibility to learn the potentially non-additive relationships between an observation's position and its magnitude. % In preliminary controlled experiments, s1 exhibited more reliable performance, and we therefore adopt it in this work. 
+
+\vspace{-6pt}
+\section{Conclusion and Future Work}
+\label{sec:conc}
+\vspace{-6pt}
+
+We proposed a method for estimating 3D ATF magnitudes from spatially sparse measurements based on FM. Our architecture using a 3D U-Net conditioned by a permutation-invariant set encoder enables reconstruction from an arbitrary number of measurements. Experimental results demonstrated that the proposed method achieves performance comparable to AE while requiring substantially shorter training time. One main limitation of the present study is that the model is evaluated only in the low-frequency range. As future work, we plan to explore richer conditioning beyond source-microphone distances, extend the evaluation to higher frequencies, multiple room and real recordings, and jointly model magnitude and phase to support downstream tasks such as 6-DoF audio rendering. In addition, applying FM in a learned latent space, as commonly done in scaled applications, may offer substantial gains in accuracy and efficiency.
+
+%As sound fields are high-dimensional and multi-modal (different room configurations, frequency bands, etc.), a robust training method is crucial.
+%has demonstrated the ability to handle large-scale data such as full resolution images, videos or long speech signals effectively. This could translate to training on extensive simulated sound field datasets without mode collapse or divergence. 
+
+%FM allows using optimized probability paths, converge faster as they capture the field structure more directly, bypassing the random perturbations arise from stochasticity of diffusion modelling.
+
+% Notable, mentioned sota methods generally operates in the latent space of frozen, pretrained autoencoder, instead of directly generating the target data (sound field in our case). This owrks proves the promising contributions of FM framework demosntrated even without using the huge benefits of the latent space. 
+
+\vfill\pagebreak
+
+% References should be produced using the bibtex program from suitable
+% BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
+% style file from IEEE produces unsorted bibliography list.
+% -------------------------------------------------------------------------
+\bibliographystyle{IEEEbib_mod}
+\bibliography{strings,refs, str_def_abrv, skoyamalab_en}
+
+\end{document}
