@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <meta name="description"
-        content="SF-Flow: Sound field magnitude estimation via flow matching guided by sparse measurements">
+    content="SF-Flow: Sound field magnitude estimation via flow matching guided by sparse measurements">
   <meta name="keywords" content="SF-Flow, Sound Field, Flow Matching, Spatial Audio">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SF-Flow: Sound field magnitude estimation via flow matching guided by sparse measurements</title>
@@ -22,15 +23,13 @@
     gtag('config', 'G-PYVRSFMDRL');
   </script>
 
-  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
-        rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
 
   <link rel="stylesheet" href="./static/css/bulma.min.css">
   <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
   <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
   <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -39,208 +38,121 @@
   <script src="./static/js/bulma-slider.min.js"></script>
   <script src="./static/js/index.js"></script>
 </head>
+
 <body>
 
-<nav class="navbar" role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-    </a>
-  </div>
-  <div class="navbar-menu">
-    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
-      <a class="navbar-item" href="https://egerdem.github.io">
-      <span class="icon">
-          <i class="fas fa-home"></i>
-      </span>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
       </a>
     </div>
+    <div class="navbar-menu">
+      <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+        <a class="navbar-item" href="https://egerdem.github.io">
+          <span class="icon">
+            <i class="fas fa-home"></i>
+          </span>
+        </a>
+      </div>
 
-  </div>
-</nav>
-
-
-<section class="hero">
-  <div class="hero-body">
-    <div class="container is-max-desktop">
-      <div class="columns is-centered">
-        <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">SF-Flow: Sound field magnitude estimation via flow matching guided by sparse measurements</h1>
-          <div class="is-size-5 publication-authors">
-            <span class="author-block">
-              <a href="https://egerdem.github.io">Ege Erdem</a><sup>1,2</sup>,</span>
-            <span class="author-block">
-              <a href="https://www.sh01.org/">Shoichi Koyama</a><sup>2</sup>,</span>
-            <span class="author-block">
-              <a href="https://scholar.google.co.jp/citations?user=Swxchg8AAAAJ">Tomohiko Nakamura</a><sup>3</sup>,
-            </span>
-            <span class="author-block">
-              <a href="https://www.kcl.ac.uk/people/zoran-cvetkovic">Zoran Cvetković</a><sup>1</sup>
-            </span>
-          </div>
-
-          <div class="is-size-5 publication-authors">
-            <span class="author-block"><sup>1</sup>King's College London, London, UK</span>
-            <span class="author-block"><sup>2</sup>National Institute of Informatics, Tokyo, Japan</span>
-            <span class="author-block"><sup>3</sup>National Institute of Advanced Industrial Science and Technology, Tokyo, Japan</span>
-          </div>
+    </div>
+  </nav>
 
 
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
           <div class="column has-text-centered">
-            <div class="publication-links">
-              <!-- PDF Link. -->
-              <span class="link-block">
-                <a href="#"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fas fa-file-pdf"></i>
-                  </span>
-                  <span>Paper</span>
-                </a>
+            <h1 class="title is-1 publication-title">SF-Flow: Sound field magnitude estimation via flow matching guided
+              by sparse measurements</h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://egerdem.github.io">Ege Erdem</a><sup>1,2</sup>,</span>
+              <span class="author-block">
+                <a href="https://www.sh01.org/">Shoichi Koyama</a><sup>2</sup>,</span>
+              <span class="author-block">
+                <a href="https://scholar.google.co.jp/citations?user=Swxchg8AAAAJ">Tomohiko Nakamura</a><sup>3</sup>,
               </span>
-              <span class="link-block">
-                <a href="#"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="ai ai-arxiv"></i>
-                  </span>
-                  <span>arXiv</span>
-                </a>
-              </span>
-              <!-- Code Link. -->
-              <span class="link-block">
-                <a href="#"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fab fa-github"></i>
-                  </span>
-                  <span>Code</span>
-                  </a>
+              <span class="author-block">
+                <a href="https://www.kcl.ac.uk/people/zoran-cvetkovic">Zoran Cvetković</a><sup>1</sup>
               </span>
             </div>
 
+            <div class="is-size-5 publication-authors">
+              <span class="author-block"><sup>1</sup>King's College London, London, UK</span>
+              <span class="author-block"><sup>2</sup>National Institute of Informatics, Tokyo, Japan</span>
+              <span class="author-block"><sup>3</sup>National Institute of Advanced Industrial Science and Technology,
+                Tokyo, Japan</span>
+            </div>
+
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- PDF Link. -->
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                    </span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+                <!-- Code Link. -->
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="hero teaser">
-  <div class="container is-max-desktop">
-    <div class="hero-body">
-      <h2 class="subtitle has-text-centered">
-        SF-Flow estimates sound field magnitudes using flow matching guided by sparse microphone measurements.
-      </h2>
-    </div>
-  </div>
-</section>
-
-
-<section class="section">
-  <div class="container is-max-desktop">
-    <!-- Abstract. -->
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
-        <div class="content has-text-justified">
-          <p>
-            Reconstructing 3D sound field from sparse microphone measurements is a fundamental yet ill-posed problem. We address this challenge through Acoustic Transfer Function (ATF) magnitude estimation, which encapsulates key perceptual and acoustic properties of a physical space and is used in enhancement, rendering, and characterization tasks. Although recent generative paradigms such as Flow Matching (FM) have achieved state-of-the-art performance in speech and music generation, their potential in spatial audio remains unexplored.
-          </p>
-          <p>
-            We propose a novel framework for 3D ATF magnitude reconstruction in the modal frequency range as a conditional generation task, with a 3D U-Net conditioned by a permutation-invariant set encoder. This architecture enables reconstruction from an arbitrary number of sparse inputs while leveraging the stable and efficient training properties of FM. Experimental results demonstrate that the proposed method achieves accurate reconstruction in the modal frequency range, while training remains efficient and scalable.
-          </p>
-        </div>
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <h2 class="subtitle has-text-centered">
+          SF-Flow estimates sound field magnitudes using flow matching guided by sparse microphone measurements.
+        </h2>
       </div>
     </div>
-    <!--/ Abstract. -->
-  </div>
-</section>
-
-
-<section class="section">
-  <div class="container is-max-desktop">
-
-    <!-- Method. -->
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3">Method</h2>
-
-        <div class="content has-text-justified">
-          <p>
-            We formulate 3D ATF magnitude reconstruction as a conditional generation problem addressed with Flow Matching (FM). FM learns to transform samples from a simple prior distribution (Gaussian noise) into samples from the target data distribution (valid 3D ATF magnitude cubes).
-          </p>
-          <p>
-            To condition the generative process on sparse microphone measurements, we employ a permutation-invariant set encoder based on the Transformer architecture. This allows the model to handle an arbitrary number and configuration of microphone observations. The generative model is a 3D U-Net architecture that maps noisy input cubes to denoised sound field estimates, with cross-attention modules providing conditioning on the sparse observation tokens.
-          </p>
-        </div>
-      </div>
-    </div>
-    <!--/ Method. -->
-
-    <!-- Results. -->
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3">Results</h2>
-
-        <div class="content has-text-justified">
-          <p>
-            We evaluated SF-Flow on reconstructing 3D sound fields from only 5 randomly placed microphones in a 1m³ target region (containing 1,331 potential positions). The proposed method achieves performance comparable to a conditioned autoencoder baseline while requiring substantially shorter training time.
-          </p>
-        </div>
-
-        <!-- Sound Field Visualization -->
-        <h3 class="title is-4" style="margin-top: 2em;">Sound Field Reconstructions</h3>
-        <div class="content has-text-justified">
-          <p>
-            The figures below show estimated ATF magnitudes at two horizontal slices from a test example with 5 random sparse microphone measurements. The top row shows results at 78 Hz, and the bottom row at 250 Hz. From left to right: ground truth, SF-Flow (ours), autoencoder baseline (AE), and kernel ridge regression (KRR).
-          </p>
-        </div>
-        <div class="content has-text-centered">
-          <img src="./static/images/f4_src0_z2.png"
-               alt="Sound field reconstruction at 78 Hz"
-               style="max-width: 100%; height: auto; margin-bottom: 1em;"/>
-          <img src="./static/images/15_src12.png"
-               alt="Sound field reconstruction at 250 Hz"
-               style="max-width: 100%; height: auto;"/>
-        </div>
-
-        <!-- ATF Frequency Response -->
-        <h3 class="title is-4" style="margin-top: 2em;">ATF Magnitude Across Frequencies</h3>
-        <div class="content has-text-justified">
-          <p>
-            The figure below shows the estimated ATF magnitude at the center of the target region across the frequency range (15–312.5 Hz) for a test example with 5 sparse measurements. SF-Flow achieves comparable accuracy to the autoencoder baseline and substantially outperforms the kernel ridge regression method.
-          </p>
-        </div>
-        <div class="content has-text-centered">
-          <img src="./static/images/ATF_comparison_src0922.png"
-               alt="ATF magnitude comparison across frequencies"
-               style="max-width: 80%; height: auto;"/>
-        </div>
-      </div>
-    </div>
-    <!--/ Results. -->
-
-  </div>
-</section>
+  </section>
 
 
 
-<section class="section" id="BibTeX">
-  <div class="container is-max-desktop content">
-    <h2 class="title">BibTeX</h2>
-    <pre><code>@article{erdem2025sfflow,
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>@article{erdem2025sfflow,
   author    = {Erdem, Ege and Koyama, Shoichi and Nakamura, Tomohiko and Cvetkovi\'c, Zoran},
   title     = {SF-Flow: Sound Field Magnitude Estimation via Flow Matching Guided by Sparse Measurements},
   journal   = {},
   year      = {2025},
 }</code></pre>
-  </div>
-</section>
+    </div>
+  </section>
 
 
+  <!--
 <section class="section" id="Acknowledgments">
   <div class="container is-max-desktop content">
     <h2 class="title">Acknowledgments</h2>
@@ -251,32 +163,33 @@
     </div>
   </div>
 </section>
+-->
 
 
-<footer class="footer">
-  <div class="container">
-    <div class="content has-text-centered">
-      <a class="icon-link" href="https://github.com/egerdem" class="external-link">
-        <i class="fab fa-github"></i>
-      </a>
-    </div>
-    <div class="columns is-centered">
-      <div class="column is-8">
-        <div class="content">
-          <p>
-            This website is licensed under a <a rel="license"
-                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
-            Commons Attribution-ShareAlike 4.0 International License</a>.
-          </p>
-          <p>
-            This website template is borrowed from <a
-              href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>.
-          </p>
+  <footer class="footer">
+    <div class="container">
+      <div class="content has-text-centered">
+        <a class="icon-link" href="https://github.com/egerdem" class="external-link">
+          <i class="fab fa-github"></i>
+        </a>
+      </div>
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              This website is licensed under a <a rel="license"
+                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+                Commons Attribution-ShareAlike 4.0 International License</a>.
+            </p>
+            <p>
+              This website template is borrowed from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>.
+            </p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</footer>
+  </footer>
 
 </body>
+
 </html>
