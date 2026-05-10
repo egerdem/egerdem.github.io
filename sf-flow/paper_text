@@ -11,10 +11,11 @@
 \usepackage{algpseudocode}
 
 \title{SF-Flow: Sound field magnitude estimation via flow matching\\guided by sparse measurements}
-
-\name{Ege Erdem$^{1, 2}$ \sthanks{* Work performed during E. Erdem's internship at NII.
-} \qquad Shoichi Koyama$^{2}$ \qquad Tomohiko Nakamura$^{3}$  \qquad Zoran Cvetkovi\'c$^{1}$}
   
+\name{Ege Erdem$^{1, 2}$ 
+\sthanks{* Work performed in part during Ege Erdem's internship at NII.} 
+\quad Shoichi Koyama$^{2}$ \quad Tomohiko Nakamura$^{3}$  \quad Orchisama Das$^{1}$ \quad Zoran Cvetkovi\'c$^{1}$}
+
   \address{$^{1}$ King's College London, London, UK \quad
       $^{2}$National Institute of Informatics, Tokyo, Japan\\
     $^{3}$National Institute of Advanced Industrial Science and Technology, Tokyo, Japan
