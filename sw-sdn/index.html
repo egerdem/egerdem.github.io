@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Source-Weighted Scattering Delay Networks">
+  <meta name="keywords" content="SDN, Scattering Delay Network, Room Acoustics, Artificial Reverberation">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Source-Weighted Scattering Delay Networks</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="../sf-flow/static/css/bulma.min.css">
+  <link rel="stylesheet" href="../sf-flow/static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="../sf-flow/static/css/index.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="../sf-flow/static/js/fontawesome.all.min.js"></script>
+</head>
+
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://egerdem.github.io">
+        <span class="icon"><i class="fas fa-home"></i></span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+
+          <h1 class="title is-1 publication-title">Source-Weighted Scattering Delay Networks</h1>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://egerdem.github.io">Ege Erdem</a>,
+            </span>
+            <span class="author-block">
+              <a href="https://www.kcl.ac.uk/people/zoran-cvetkovic">Zoran Cvetković</a>
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">King's College London, London, UK</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="#" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="ai ai-arxiv"></i></span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://github.com/egerdem/SDN" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon"><i class="fab fa-github"></i></span>
+                  <span>Code</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="/sw-sdn-demo/" class="external-link button is-normal is-rounded is-dark" style="background:#2980b9; border-color:#2980b9;">
+                  <span class="icon"><i class="fas fa-chart-line"></i></span>
+                  <span>Interactive Demo</span>
+                </a>
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Abstract -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Scattering Delay Networks (SDNs) are computationally efficient artificial reverberation algorithms
+            that render room reflections in real time by connecting inter-wall delay lines via unitary, isotropic
+            pressure scattering. They render the direct sound and first-order reflections exactly, while
+            higher-order reflections are generated approximately through recursive scattering.
+          </p>
+          <p>
+            We show that the uniform source injection in SDN, inherited from digital waveguide meshes, imposes
+            a fixed attenuation of 1/(<em>N</em>&minus;1) on second-order reflections in an <em>N</em>-wall
+            cuboid space. This attenuation accidentally aligns with the Image Source Method (ISM) early energy
+            profile for boundary-adjacent sources while creating a large energy deficit for centrally located sources.
+          </p>
+          <p>
+            We introduce <strong>Source-Weighted SDN (SW-SDN)</strong> to address this early energy mismatch
+            by replacing the uniform injection vector with a single-parameter weighting that controls the energy
+            entering the recursive network from second-order reflections onward. We further propose a simple
+            geometric predictor derived from source-to-wall distances that selects the optimal injection weight
+            at negligible computational cost and generalises across room geometries, validated by a Monte Carlo
+            study of 60 random source-receiver pairs across 10 rooms. The proposed rule reduces the 0–50 ms
+            energy decay curve RMSE to within 0.5 dB of a reference ISM, while preserving the late reverberation
+            decay rate and the low computational cost of the original algorithm.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Demo teaser -->
+<section class="section" style="background:#f5f5f5;">
+  <div class="container is-max-desktop has-text-centered">
+    <h2 class="title is-3">Interactive Demo</h2>
+    <p class="is-size-5" style="margin-bottom: 1.5rem;">
+      Compare SDN, SW-SDN, ISM, RIM-Py, and TREBLE across 64 source–receiver positions
+      in a real room. Inspect energy decay curves, room impulse responses, and RMSE metrics.
+    </p>
+    <a href="/sw-sdn-demo/" class="button is-large is-rounded is-link">
+      <span class="icon"><i class="fas fa-chart-line"></i></span>
+      <span>Launch Demo</span>
+    </a>
+  </div>
+</section>
+
+
+<!-- BibTeX -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{erdem2026swsdn,
+  title   = {Source-Weighted Scattering Delay Networks},
+  author  = {Erdem, Ege and Cvetkovi\'{c}, Zoran},
+  journal = {IEEE Transactions on Audio, Speech, and Language Processing},
+  year    = {2026}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p>
+            This page was built using the
+            <a href="https://nerfies.github.io" target="_blank">Nerfies</a> template.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

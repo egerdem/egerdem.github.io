@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDN Acoustic Simulator — Interactive Demo</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #2d3038;
+  --paper:   #282c34;
+  --header:  #1e2129;
+  --text:    #e0e0e0;
+  --dim:     #888;
+  --accent:  #61dafb;
+  --border:  rgba(255,255,255,0.12);
+  --btn:     #404040;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  padding: 8px 10px;
+  min-height: 100vh;
+}
+
+/* ── Loading overlay ── */
+#loading {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.75);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px;
+  font-size: 1.1em; color: var(--accent);
+  z-index: 999;
+}
+#loading-bar-wrap { width: 260px; height: 4px; background: var(--btn); border-radius: 2px; }
+#loading-bar { height: 100%; width: 0%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+
+/* ── Top nav bar ── */
+#topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px; gap: 10px; flex-wrap: wrap;
+}
+#src-nav { display: flex; align-items: center; gap: 6px; }
+#src-name { min-width: 150px; text-align: center; color: var(--accent); font-weight: bold; font-size: 13px; }
+#room-info { text-align: center; flex: 1; }
+#room-info h3 { font-size: 13px; color: var(--accent); }
+#room-info small { color: var(--dim); font-size: 11px; }
+#layout-switch { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dim); }
+
+/* ── Buttons ── */
+.btn {
+  background: var(--btn); color: var(--text);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 2px 8px; cursor: pointer; font-size: 13px;
+  transition: background .12s;
+}
+.btn:hover { background: #505050; }
+.btn.icon { width: 26px; height: 26px; padding: 0; font-size: 15px; }
+
+/* ── Main split ── */
+#main { display: flex; gap: 10px; }
+#left  { flex: 7; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+#right { flex: 3; min-width: 0; }
+
+/* ── Time range ── */
+#trange-bar { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--dim); }
+#trange-bar label { cursor: pointer; }
+#trange-bar input[type=radio] { accent-color: var(--accent); }
+
+/* ── Plots ── */
+#plot-row { display: flex; gap: 6px; }
+.plot-box { flex: 1; min-width: 0; }
+
+/* ── Table section ── */
+#table-section { background: var(--paper); border-radius: 4px; padding: 6px 8px; }
+#ref-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+#ref-row label { color: var(--dim); font-size: 12px; white-space: nowrap; }
+select {
+  background: var(--paper); color: var(--text);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 3px 6px; font-size: 12px;
+}
+#exp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#exp-table th {
+  background: var(--header); color: var(--text); text-align: left;
+  padding: 4px 8px; font-weight: bold; white-space: nowrap;
+}
+#exp-table td {
+  background: var(--paper); color: var(--text);
+  padding: 3px 8px; border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+#exp-table tr.is-ref td { background: rgba(97,218,251,0.08); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; flex-shrink: 0; }
+
+/* ── Right panel ── */
+#right h4 { color: var(--dim); font-size: 11px; margin-bottom: 4px; }
+.sel-row { display: flex; align-items: center; gap: 6px; margin: 5px 0; }
+.sel-row label { font-size: 11px; color: var(--dim); white-space: nowrap; }
+.sel-row select { flex: 1; }
+#rec-nav { display: flex; justify-content: center; gap: 8px; margin-top: 6px; }
+#pos-info { font-size: 10px; color: var(--dim); margin-top: 4px; text-align: center; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- ── Loading ─────────────────────────────────────────────────────────────── -->
+<div id="loading">
+  <span id="loading-msg">Loading data…</span>
+  <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+</div>
+
+<!-- ── Top bar ────────────────────────────────────────────────────────────── -->
+<div id="topbar">
+  <a href="/sw-sdn/" style="color:var(--dim);font-size:12px;text-decoration:none;white-space:nowrap;padding:4px 0;">← Paper</a>
+  <div id="src-nav">
+    <button class="btn icon" id="btn-prev-src">←</button>
+    <span id="src-name">—</span>
+    <button class="btn icon" id="btn-next-src">→</button>
+  </div>
+  <div id="room-info">
+    <h3 id="room-title">—</h3>
+    <small id="room-sub">—</small>
+  </div>
+  <div id="layout-switch">
+    Layout:
+    <label><input type="radio" name="layout" value="monitor" checked> Monitor</label>
+    <label><input type="radio" name="layout" value="laptop"> Laptop</label>
+  </div>
+</div>
+
+<!-- ── Main ───────────────────────────────────────────────────────────────── -->
+<div id="main">
+
+  <!-- Left: plots + table -->
+  <div id="left">
+
+    <!-- Time range selector -->
+    <div id="trange-bar">
+      <span>Time range:</span>
+      <label><input type="radio" name="tr" value="0.05" checked> Early (50 ms)</label>
+      <label><input type="radio" name="tr" value="0.5"> 0–500 ms</label>
+      <label><input type="radio" name="tr" value="full"> Full (1 s)</label>
+    </div>
+
+    <!-- Plots -->
+    <div id="plot-row">
+      <div class="plot-box"><div id="edc-plot" style="height:38vh"></div></div>
+      <div class="plot-box"><div id="rir-plot" style="height:38vh"></div></div>
+    </div>
+
+    <!-- Table -->
+    <div id="table-section">
+      <div id="ref-row">
+        <label>Reference:</label>
+        <select id="ref-sel" style="min-width:200px"></select>
+        <span id="ref-info" style="color:var(--dim);font-size:11px;margin-left:6px"></span>
+      </div>
+      <table id="exp-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Experiment</th>
+            <th>RT60</th>
+            <th>RMSE [0–50ms]</th>
+            <th>RMSE [0–500ms]</th>
+          </tr>
+        </thead>
+        <tbody id="exp-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Right: room + selectors -->
+  <div id="right">
+    <h4>Room (top view)</h4>
+    <div id="room-plot" style="height:38vh"></div>
+    <div class="sel-row">
+      <label>Source:</label>
+      <select id="src-sel"></select>
+    </div>
+    <div class="sel-row">
+      <label>Receiver:</label>
+      <select id="rec-sel"></select>
+    </div>
+    <div id="rec-nav">
+      <button class="btn icon" id="btn-prev-rec">←</button>
+      <button class="btn icon" id="btn-next-rec">→</button>
+    </div>
+    <div id="pos-info"></div>
+  </div>
+
+</div><!-- #main -->
+
+<!-- ── JavaScript ─────────────────────────────────────────────────────────── -->
+<script>
+'use strict';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let D        = null;   // parsed data.json
+let selSrc   = 0;
+let selRec   = 0;
+let refKey   = null;   // exp_key of reference experiment
+let trange   = 0.05;   // seconds or 'full'
+let curLayout = 'monitor';
+let roomInitialized = false;
+
+// ── Color palette (assigned once to exp_keys in order) ────────────────────────
+const PALETTE = [
+  '#61dafb','#ff6b6b','#ffd93d','#6bcb77','#c77dff',
+  '#ff9f43','#48dbfb','#ff6b9d','#a8e063','#f8b739',
+  '#74b9ff','#fd79a8','#55efc4','#e17055','#a29bfe',
+  '#00b894','#fdcb6e','#e84393','#00cec9','#6c5ce7',
+];
+const KEY_COLOR = {};
+
+function initColors() {
+  D.exp_keys.forEach((k, i) => { KEY_COLOR[k] = PALETTE[i % PALETTE.length]; });
+}
+
+function colorFor(method, param_set) {
+  return KEY_COLOR[`${method}/${param_set}`] || '#aaa';
+}
+
+// ── Accessors ─────────────────────────────────────────────────────────────────
+function posIdx()    { return selSrc * D.receivers.length + selRec; }
+function getPos()    { return D.positions[posIdx()]; }
+
+// ── RMSE helper ───────────────────────────────────────────────────────────────
+function rmse(a, b, nMax) {
+  const n = Math.min(a.length, b.length, nMax);
+  let s = 0;
+  for (let i = 0; i < n; i++) s += (a[i] - b[i]) ** 2;
+  return Math.sqrt(s / n).toFixed(5);
+}
+
+// ── X-axis range for a given time limit ───────────────────────────────────────
+function xRange(tMax, lastTime) {
+  if (tMax === 'full') return [0, lastTime];
+  return [0, Math.min(parseFloat(tMax), lastTime)];
+}
+
+// ── Dark plot layout factory ──────────────────────────────────────────────────
+function darkLayout(title, xLabel, yLabel, xr, yr) {
+  return {
+    paper_bgcolor: '#282c34', plot_bgcolor: '#1e2129',
+    font: { color: '#e0e0e0', size: 11 },
+    title: { text: title, font: { size: 12, color: '#e0e0e0' }, x: 0.5, xanchor: 'center', pad: { t: 2 } },
+    margin: { t: 28, b: 42, l: 52, r: 14 },
+    xaxis: {
+      title: { text: xLabel, font: { size: 11 } },
+      range: xr, color: '#aaa',
+      gridcolor: 'rgba(255,255,255,0.07)', zeroline: false,
+    },
+    yaxis: {
+      title: { text: yLabel, font: { size: 11 } },
+      range: yr, color: '#aaa',
+      gridcolor: 'rgba(255,255,255,0.07)', zeroline: false,
+    },
+    showlegend: false,
+    hovermode: 'x unified',
+    hoverlabel: { bgcolor: '#1e2129', bordercolor: '#61dafb', font: { color: '#e0e0e0', size: 11 } },
+  };
+}
+
+// ── Room plot ─────────────────────────────────────────────────────────────────
+function renderRoom() {
+  const W = D.meta.room.width, H = D.meta.room.depth;
+
+  // Dim: all receivers
+  const rTrace = {
+    x: D.receivers.map(r => r[0]),
+    y: D.receivers.map(r => r[1]),
+    mode: 'markers',
+    marker: { color: '#4CAF50', size: 9, opacity: 0.22,
+               line: { color: '#4CAF50', width: 1 } },
+    customdata: D.receivers.map((_, i) => ['rec', i]),
+    hovertext: D.receivers.map((r, i) => `Rec ${i+1}: (${r[0]}, ${r[1]}, ${r[2]})`),
+    hoverinfo: 'text', name: 'Receivers', showlegend: false, type: 'scatter',
+  };
+
+  // Dim: all sources
+  const sTrace = {
+    x: D.sources.map(s => s.position[0]),
+    y: D.sources.map(s => s.position[1]),
+    mode: 'markers',
+    marker: { color: '#f44336', size: 14, opacity: 0.25, symbol: 'star',
+               line: { color: '#f44336', width: 1 } },
+    customdata: D.sources.map((_, i) => ['src', i]),
+    hovertext: D.sources.map(s => `${s.label}`),
+    hoverinfo: 'text', name: 'Sources', showlegend: false, type: 'scatter',
+  };
+
+  // Active receiver
+  const ar = D.receivers[selRec];
+  const arTrace = {
+    x: [ar[0]], y: [ar[1]], mode: 'markers',
+    marker: { color: '#4CAF50', size: 14, line: { color: 'white', width: 2 } },
+    hovertext: [`Active Rec ${selRec+1}`], hoverinfo: 'text',
+    name: 'Active Rec', showlegend: true, type: 'scatter',
+  };
+
+  // Active source
+  const as = D.sources[selSrc];
+  const asTrace = {
+    x: [as.position[0]], y: [as.position[1]], mode: 'markers',
+    marker: { color: '#f44336', size: 16, symbol: 'star', line: { color: 'white', width: 2 } },
+    hovertext: [as.label], hoverinfo: 'text',
+    name: 'Active Src', showlegend: true, type: 'scatter',
+  };
+
+  const lay = {
+    paper_bgcolor: '#282c34', plot_bgcolor: '#1e2129',
+    font: { color: '#e0e0e0', size: 10 },
+    margin: { t: 6, b: 32, l: 36, r: 6 },
+    xaxis: { title: 'Width (m)', range: [-0.4, W+0.4],
+              gridcolor: 'rgba(255,255,255,0.07)', zeroline: false, color: '#aaa' },
+    yaxis: { title: 'Depth (m)', range: [-0.4, H+0.4],
+              scaleanchor: 'x', scaleratio: 1,
+              gridcolor: 'rgba(255,255,255,0.07)', zeroline: false, color: '#aaa' },
+    showlegend: true,
+    legend: { x: 0.02, y: 0.02, xanchor: 'left', yanchor: 'bottom',
+               bgcolor: 'rgba(30,33,41,0.85)', bordercolor: 'rgba(255,255,255,0.15)',
+               borderwidth: 1, font: { size: 9 } },
+    shapes: [{
+      type: 'rect', x0: 0, y0: 0, x1: W, y1: H,
+      line: { color: 'rgba(255,255,255,0.35)', width: 2 },
+      fillcolor: 'rgba(50,50,65,0.15)',
+    }],
+    clickmode: 'event',
+  };
+
+  const el = document.getElementById('room-plot');
+  Plotly.react(el, [rTrace, sTrace, arTrace, asTrace], lay,
+               { displayModeBar: false, responsive: true });
+
+  if (!roomInitialized) {
+    el.on('plotly_click', ev => {
+      if (!ev.points?.[0]) return;
+      const cd = ev.points[0].customdata;
+      if (!cd) return;
+      if (cd[0] === 'src') { selSrc = cd[1]; selRec = 0; updateAll(); }
+      else if (cd[0] === 'rec') { selRec = cd[1]; updateAll(); }
+    });
+    roomInitialized = true;
+  }
+}
+
+// ── EDC plot ──────────────────────────────────────────────────────────────────
+function renderEDC() {
+  const pos = getPos();
+  const t   = D.meta.edc_time;
+  const xr  = xRange(trange, t.at(-1));
+
+  const traces = pos.experiments.map(exp => ({
+    x: t, y: exp.edc,
+    type: 'scatter', mode: 'lines',
+    name: exp.label,
+    line: { color: colorFor(exp.method, exp.param_set), width: 1.5 },
+  }));
+
+  const lay = darkLayout('Energy Decay Curve', 'Time (s)', 'Level (dB)', xr, [-65, 3]);
+  Plotly.react('edc-plot', traces, lay, { responsive: true });
+}
+
+// ── RIR plot ──────────────────────────────────────────────────────────────────
+function renderRIR() {
+  const pos = getPos();
+  const t   = D.meta.rir_time;
+  const xr  = xRange(trange, t.at(-1));
+
+  const traces = pos.experiments.map(exp => ({
+    x: t, y: exp.rir,
+    type: 'scatter', mode: 'lines',
+    name: exp.label,
+    line: { color: colorFor(exp.method, exp.param_set), width: 1 },
+  }));
+
+  const lay = darkLayout('Room Impulse Response', 'Time (s)', 'Amplitude', xr, null);
+  Plotly.react('rir-plot', traces, lay, { responsive: true });
+}
+
+// ── Experiment table ──────────────────────────────────────────────────────────
+function renderTable() {
+  const pos  = getPos();
+  const exps = pos.experiments;
+
+  // n_50ms and n_500ms: how many EDC points correspond to those durations
+  const dt    = D.meta.edc_time[1] - D.meta.edc_time[0];
+  const n50   = Math.min(Math.ceil(0.05  / dt), D.meta.edc_time.length);
+  const n500  = Math.min(Math.ceil(0.500 / dt), D.meta.edc_time.length);
+
+  const refExp = exps.find(e => `${e.method}/${e.param_set}` === refKey);
+
+  const tbody = document.getElementById('exp-tbody');
+  tbody.innerHTML = '';
+
+  exps.forEach((exp, i) => {
+    const ek    = `${exp.method}/${exp.param_set}`;
+    const isRef = (ek === refKey);
+    const tr    = document.createElement('tr');
+    if (isRef) tr.classList.add('is-ref');
+
+    let r50 = '—', r500 = '—';
+    if (refExp && !isRef) {
+      r50  = rmse(refExp.edc, exp.edc, n50);
+      r500 = rmse(refExp.edc, exp.edc, n500);
+    } else if (!refExp) {
+      r50 = r500 = 'N/A';
+    }
+
+    tr.innerHTML =
+      `<td>${i+1}</td>` +
+      `<td><span class="dot" style="background:${colorFor(exp.method, exp.param_set)}"></span>${exp.label}${isRef ? ' ★' : ''}</td>` +
+      `<td>${exp.rt60 !== null ? exp.rt60 + ' s' : '—'}</td>` +
+      `<td>${r50}</td>` +
+      `<td>${r500}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Reference dropdown ────────────────────────────────────────────────────────
+function buildRefSel() {
+  const pos  = getPos();
+  const sel  = document.getElementById('ref-sel');
+  const prev = refKey;
+  sel.innerHTML = '<option value="">— no reference —</option>';
+  pos.experiments.forEach(exp => {
+    const ek  = `${exp.method}/${exp.param_set}`;
+    const opt = document.createElement('option');
+    opt.value = ek; opt.textContent = exp.label;
+    if (ek === prev) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  refKey = sel.value || null;
+}
+
+// ── Source / receiver dropdowns ───────────────────────────────────────────────
+function buildDropdowns() {
+  const ss = document.getElementById('src-sel');
+  const rs = document.getElementById('rec-sel');
+  ss.innerHTML = '';
+  D.sources.forEach((s, i) => {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = s.label;
+    if (i === selSrc) o.selected = true;
+    ss.appendChild(o);
+  });
+  rs.innerHTML = '';
+  D.receivers.forEach((r, i) => {
+    const o = document.createElement('option');
+    const fmt = v => parseFloat(v.toFixed(2));
+    o.value = i; o.textContent = `R${i+1}  (${fmt(r[0])}, ${fmt(r[1])})`;
+    if (i === selRec) o.selected = true;
+    rs.appendChild(o);
+  });
+}
+
+// ── Top bar + pos info ────────────────────────────────────────────────────────
+function updateHeader() {
+  const rm  = D.meta.room;
+  const src = D.sources[selSrc];
+  const rec = D.receivers[selRec];
+  document.getElementById('src-name').textContent = src.label;
+  document.getElementById('room-title').textContent =
+    `${rm.display_name}  (${rm.width} × ${rm.depth} × ${rm.height} m,  α = ${rm.absorption})`;
+  const V    = rm.width * rm.depth * rm.height;
+  const S    = 2*(rm.width*rm.depth + rm.width*rm.height + rm.depth*rm.height);
+  const rt60 = (0.161 * V / (S * rm.absorption)).toFixed(2);
+  document.getElementById('room-sub').textContent =
+    `Sabine RT60 ≈ ${rt60} s  |  Receiver ${selRec+1} / ${D.receivers.length}`;
+  const f2 = v => (+v).toFixed(2);
+  document.getElementById('pos-info').innerHTML =
+    `Src: (${src.position.map(f2).join(', ')})<br>Rec: (${rec.map(f2).join(', ')})`;
+}
+
+// ── Master update ─────────────────────────────────────────────────────────────
+function updateAll() {
+  updateHeader();
+  buildDropdowns();
+  buildRefSel();
+  renderRoom();
+  renderEDC();
+  renderRIR();
+  renderTable();
+}
+
+// ── Layout switch (just changes flex direction) ───────────────────────────────
+function applyLayout(l) {
+  curLayout = l;
+  const row = document.getElementById('plot-row');
+  if (l === 'laptop') {
+    row.style.flexDirection = 'column';
+    row.querySelectorAll('.plot-box').forEach(b => b.style.width = '100%');
+  } else {
+    row.style.flexDirection = 'row';
+    row.querySelectorAll('.plot-box').forEach(b => b.style.width = '');
+  }
+  // Trigger Plotly resize so axes fit
+  setTimeout(() => {
+    Plotly.relayout('edc-plot', {autosize: true});
+    Plotly.relayout('rir-plot', {autosize: true});
+  }, 50);
+}
+
+// ── Wire all non-Plotly events ────────────────────────────────────────────────
+function wireEvents() {
+  document.getElementById('btn-prev-src').onclick = () => {
+    selSrc = (selSrc - 1 + D.sources.length) % D.sources.length; selRec = 0; updateAll();
+  };
+  document.getElementById('btn-next-src').onclick = () => {
+    selSrc = (selSrc + 1) % D.sources.length; selRec = 0; updateAll();
+  };
+  document.getElementById('btn-prev-rec').onclick = () => {
+    selRec = (selRec - 1 + D.receivers.length) % D.receivers.length; updateAll();
+  };
+  document.getElementById('btn-next-rec').onclick = () => {
+    selRec = (selRec + 1) % D.receivers.length; updateAll();
+  };
+
+  document.getElementById('src-sel').onchange = e => {
+    selSrc = +e.target.value; selRec = 0; updateAll();
+  };
+  document.getElementById('rec-sel').onchange = e => {
+    selRec = +e.target.value; updateAll();
+  };
+  document.getElementById('ref-sel').onchange = e => {
+    refKey = e.target.value || null; renderTable();
+  };
+
+  document.querySelectorAll('input[name="layout"]').forEach(r => {
+    r.onchange = e => applyLayout(e.target.value);
+  });
+
+  document.querySelectorAll('input[name="tr"]').forEach(r => {
+    r.onchange = e => {
+      trange = e.target.value === 'full' ? 'full' : parseFloat(e.target.value);
+      const xrEDC = xRange(trange, D.meta.edc_time.at(-1));
+      const xrRIR = xRange(trange, D.meta.rir_time.at(-1));
+      Plotly.relayout('edc-plot', { 'xaxis.range': xrEDC });
+      Plotly.relayout('rir-plot', { 'xaxis.range': xrRIR });
+    };
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  const bar = document.getElementById('loading-bar');
+  const msg = document.getElementById('loading-msg');
+
+  try {
+    msg.textContent = 'Fetching data…';
+    bar.style.width = '20%';
+
+    const resp = await fetch('./data.json');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} — make sure data.json exists (run precompute.py first)`);
+
+    bar.style.width = '60%';
+    msg.textContent = 'Parsing…';
+    D = await resp.json();
+
+    bar.style.width = '85%';
+    msg.textContent = 'Rendering…';
+
+    initColors();
+    wireEvents();
+    updateAll();
+
+    bar.style.width = '100%';
+    await new Promise(r => setTimeout(r, 200));
+    document.getElementById('loading').style.display = 'none';
+
+  } catch (err) {
+    msg.textContent = `⚠ ${err.message}`;
+    bar.style.background = '#ff6b6b';
+    bar.style.width = '100%';
+    console.error(err);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
