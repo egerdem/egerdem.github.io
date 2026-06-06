@@ -210,6 +210,14 @@ let trange   = 0.05;   // seconds or 'full'
 let curLayout = 'monitor';
 let roomInitialized = false;
 
+// Persisted zoom: set by user pan/zoom, cleared on time-range or room change
+let edcSavedRanges = null;   // {x:[min,max], y:[min,max]} or null
+let rirSavedRanges = null;
+
+// Persisted legend visibility: trace name -> true | 'legendonly'
+let edcVisibility = {};
+let rirVisibility = {};
+
 // ── Color palette — fixed global order ensures same method = same color across rooms ──
 const PALETTE = [
   '#61dafb','#ff6b6b','#ffd93d','#6bcb77','#c77dff',
@@ -246,14 +254,26 @@ function rmse(a, b, nMax) {
   return Math.sqrt(s / n).toFixed(5);
 }
 
-// ── X-axis range for a given time limit ───────────────────────────────────────
-function xRange(tMax, lastTime) {
-  if (tMax === 'full') return [0, lastTime];
-  return [0, Math.min(parseFloat(tMax), lastTime)];
+// ── Default axis ranges per time selection ────────────────────────────────────
+function edcDefaultXRange() {
+  if (trange === 'full') return [0, 1.0];
+  if (trange >= 0.5)    return [0, 0.5];
+  return [0, 0.07];  // early 50ms — show a bit beyond 50ms for context
+}
+function edcDefaultYRange() {
+  if (trange === 'full') return [-65, 0.5];
+  if (trange >= 0.5)    return [-35, 0.5];
+  return [-10, 0.5];  // early 50ms
+}
+function rirDefaultXRange() {
+  const last = getRoom().rir_time.at(-1);
+  if (trange === 'full') return [0, last];
+  if (trange >= 0.5)    return [0, Math.min(0.5, last)];
+  return [0, Math.min(0.07, last)];
 }
 
 // ── Dark plot layout factory ──────────────────────────────────────────────────
-function darkLayout(title, xLabel, yLabel, xr, yr) {
+function darkLayout(title, xLabel, yLabel, xr, yr, legendCfg) {
   return {
     paper_bgcolor: '#282c34', plot_bgcolor: '#1e2129',
     font: { color: '#e0e0e0', size: 11 },
@@ -269,9 +289,14 @@ function darkLayout(title, xLabel, yLabel, xr, yr) {
       range: yr, color: '#aaa',
       gridcolor: 'rgba(255,255,255,0.07)', zeroline: false,
     },
-    showlegend: false,
-    hovermode: 'x unified',
-    hoverlabel: { bgcolor: '#1e2129', bordercolor: '#61dafb', font: { color: '#e0e0e0', size: 11 } },
+    showlegend: true,
+    legend: legendCfg || {
+      x: 0.01, y: 0.02, xanchor: 'left', yanchor: 'bottom',
+      bgcolor: 'rgba(28,32,40,0.88)', bordercolor: 'rgba(255,255,255,0.13)',
+      borderwidth: 1, font: { size: 8.5 }, tracegroupgap: 1,
+    },
+    hovermode: 'closest',
+    hoverlabel: { bgcolor: '#1e2129', bordercolor: '#555', font: { color: '#e0e0e0', size: 10 } },
   };
 }
 
@@ -363,16 +388,19 @@ function renderRoom() {
 function renderEDC() {
   const pos = getPos();
   const t   = getRoom().edc_time;
-  const xr  = xRange(trange, t.at(-1));
 
   const traces = pos.experiments.map(exp => ({
     x: t, y: exp.edc,
     type: 'scatter', mode: 'lines',
     name: exp.label,
+    visible: edcVisibility[exp.label] !== undefined ? edcVisibility[exp.label] : true,
     line: { color: colorFor(exp.method, exp.param_set), width: 1.5 },
+    hovertemplate: '%{y:.2f} dB<extra></extra>',
   }));
 
-  const lay = darkLayout('Energy Decay Curve', 'Time (s)', 'Level (dB)', xr, [-65, 3]);
+  const xr = edcSavedRanges ? edcSavedRanges.x : edcDefaultXRange();
+  const yr = edcSavedRanges ? edcSavedRanges.y : edcDefaultYRange();
+  const lay = darkLayout('Energy Decay Curve', 'Time (s)', 'Level (dB)', xr, yr);
   Plotly.react('edc-plot', traces, lay, { responsive: true });
 }
 
@@ -380,15 +408,17 @@ function renderEDC() {
 function renderRIR() {
   const pos = getPos();
   const t   = getRoom().rir_time;
-  const xr  = xRange(trange, t.at(-1));
 
   const traces = pos.experiments.map(exp => ({
     x: t, y: exp.rir,
     type: 'scatter', mode: 'lines',
     name: exp.label,
+    visible: rirVisibility[exp.label] !== undefined ? rirVisibility[exp.label] : true,
     line: { color: colorFor(exp.method, exp.param_set), width: 1 },
+    hovertemplate: '%{y:.4f}<extra></extra>',
   }));
 
+  const xr = rirSavedRanges ? rirSavedRanges.x : rirDefaultXRange();
   const lay = darkLayout('Room Impulse Response', 'Time (s)', 'Amplitude', xr, null);
   Plotly.react('rir-plot', traces, lay, { responsive: true });
 }
@@ -490,6 +520,43 @@ function updateHeader() {
     `Src: (${src.position.map(f2).join(', ')})<br>Rec: (${rec.map(f2).join(', ')})`;
 }
 
+// ── Register Plotly events (called once after first render) ───────────────────
+function registerPlotEvents() {
+  function captureRelayout(elId, saveRef) {
+    document.getElementById(elId).on('plotly_relayout', ev => {
+      if (ev['xaxis.autorange'] || ev['yaxis.autorange']) {
+        saveRef.val = null; return;
+      }
+      const x0 = ev['xaxis.range[0]'], x1 = ev['xaxis.range[1]'];
+      const y0 = ev['yaxis.range[0]'], y1 = ev['yaxis.range[1]'];
+      if (x0 !== undefined && y0 !== undefined)
+        saveRef.val = { x: [x0, x1], y: [y0, y1] };
+      else if (x0 !== undefined)
+        saveRef.val = { x: [x0, x1], y: saveRef.val ? saveRef.val.y : null };
+    });
+  }
+
+  function captureVisibility(elId, visStore) {
+    document.getElementById(elId).on('plotly_restyle', (data, indices) => {
+      if (!data[0] || data[0].visible === undefined) return;
+      const plot = document.getElementById(elId);
+      const visArr = Array.isArray(data[0].visible) ? data[0].visible : [data[0].visible];
+      indices.forEach((ti, i) => {
+        const name = plot.data[ti] && plot.data[ti].name;
+        if (name) visStore[name] = visArr[i];
+      });
+    });
+  }
+
+  // Use wrapper objects so the reference can be read/written from closures
+  const edcRef = { get val() { return edcSavedRanges; }, set val(v) { edcSavedRanges = v; } };
+  const rirRef = { get val() { return rirSavedRanges; }, set val(v) { rirSavedRanges = v; } };
+  captureRelayout('edc-plot', edcRef);
+  captureRelayout('rir-plot', rirRef);
+  captureVisibility('edc-plot', edcVisibility);
+  captureVisibility('rir-plot', rirVisibility);
+}
+
 // ── Master update ─────────────────────────────────────────────────────────────
 function updateAll() {
   updateHeader();
@@ -523,6 +590,8 @@ function applyLayout(l) {
 function wireEvents() {
   document.getElementById('room-sel').onchange = e => {
     selRoom = +e.target.value; selSrc = 0; selRec = 0; refKey = null;
+    edcSavedRanges = null; rirSavedRanges = null;
+    edcVisibility = {}; rirVisibility = {};
     roomInitialized = false; updateAll();
   };
   document.getElementById('btn-prev-src').onclick = () => {
@@ -555,10 +624,10 @@ function wireEvents() {
   document.querySelectorAll('input[name="tr"]').forEach(r => {
     r.onchange = e => {
       trange = e.target.value === 'full' ? 'full' : parseFloat(e.target.value);
-      const xrEDC = xRange(trange, getRoom().edc_time.at(-1));
-      const xrRIR = xRange(trange, getRoom().rir_time.at(-1));
-      Plotly.relayout('edc-plot', { 'xaxis.range': xrEDC });
-      Plotly.relayout('rir-plot', { 'xaxis.range': xrRIR });
+      edcSavedRanges = null;  // reset saved zoom when switching time range
+      rirSavedRanges = null;
+      renderEDC();
+      renderRIR();
     };
   });
 }
@@ -594,6 +663,7 @@ async function init() {
 
     wireEvents();
     updateAll();
+    registerPlotEvents();  // must be after first render so Plotly elements exist
 
     bar.style.width = '100%';
     await new Promise(r => setTimeout(r, 200));
