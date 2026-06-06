@@ -43,8 +43,8 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 6px; gap: 10px; flex-wrap: wrap;
 }
-#src-nav { display: flex; align-items: center; gap: 6px; }
-#src-name { min-width: 150px; text-align: center; color: var(--accent); font-weight: bold; font-size: 13px; }
+#room-nav { display: flex; align-items: center; gap: 6px; }
+#room-nav-name { min-width: 160px; text-align: center; color: var(--accent); font-weight: bold; font-size: 13px; }
 #room-info { text-align: center; flex: 1; }
 #room-info h3 { font-size: 13px; color: var(--accent); }
 #room-info small { color: var(--dim); font-size: 11px; }
@@ -116,11 +116,10 @@ select {
 <!-- ── Top bar ────────────────────────────────────────────────────────────── -->
 <div id="topbar">
   <a href="/sw-sdn/" style="color:var(--dim);font-size:12px;text-decoration:none;white-space:nowrap;padding:4px 0;">← Paper</a>
-  <select id="room-sel" style="min-width:160px"></select>
-  <div id="src-nav">
-    <button class="btn icon" id="btn-prev-src">←</button>
-    <span id="src-name">—</span>
-    <button class="btn icon" id="btn-next-src">→</button>
+  <div id="room-nav">
+    <button class="btn icon" id="btn-prev-room">←</button>
+    <span id="room-nav-name">—</span>
+    <button class="btn icon" id="btn-next-room">→</button>
   </div>
   <div id="room-info">
     <h3 id="room-title">—</h3>
@@ -202,7 +201,7 @@ select {
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let D        = null;   // parsed data.json
-let selRoom  = 0;
+let selRoom  = 1;  // default: full grid
 let selSrc   = 0;
 let selRec   = 0;
 let refKey   = null;   // exp_key of reference experiment
@@ -507,7 +506,7 @@ function updateHeader() {
   const rm  = room.room;
   const src = room.sources[selSrc];
   const rec = room.receivers[selRec];
-  document.getElementById('src-name').textContent = src.label;
+  document.getElementById('room-nav-name').textContent = room.display_name;
   document.getElementById('room-title').textContent =
     `${rm.display_name}  (${rm.width} × ${rm.depth} × ${rm.height} m,  α = ${rm.absorption})`;
   const V    = rm.width * rm.depth * rm.height;
@@ -537,13 +536,20 @@ function registerPlotEvents() {
   }
 
   function captureVisibility(elId, visStore) {
-    document.getElementById(elId).on('plotly_restyle', (data, indices) => {
-      if (!data[0] || data[0].visible === undefined) return;
-      const plot = document.getElementById(elId);
-      const visArr = Array.isArray(data[0].visible) ? data[0].visible : [data[0].visible];
+    // plotly_restyle emits a single array: [updateObj, traceIndices]
+    document.getElementById(elId).on('plotly_restyle', (eventData) => {
+      if (!Array.isArray(eventData)) return;
+      const update  = eventData[0];
+      const indices = eventData[1];
+      if (!update || update.visible === undefined || !Array.isArray(indices)) return;
+      const plot   = document.getElementById(elId);
+      const visArr = Array.isArray(update.visible)
+        ? update.visible
+        : new Array(indices.length).fill(update.visible);
       indices.forEach((ti, i) => {
-        const name = plot.data[ti] && plot.data[ti].name;
-        if (name) visStore[name] = visArr[i];
+        const trace = plot.data[ti];
+        if (trace && trace.name)
+          visStore[trace.name] = visArr[i] !== undefined ? visArr[i] : visArr[0];
       });
     });
   }
@@ -588,17 +594,19 @@ function applyLayout(l) {
 
 // ── Wire all non-Plotly events ────────────────────────────────────────────────
 function wireEvents() {
-  document.getElementById('room-sel').onchange = e => {
-    selRoom = +e.target.value; selSrc = 0; selRec = 0; refKey = null;
+  document.getElementById('btn-prev-room').onclick = () => {
+    selRoom = (selRoom - 1 + D.rooms.length) % D.rooms.length;
+    selSrc = 0; selRec = 0; refKey = null;
     edcSavedRanges = null; rirSavedRanges = null;
     edcVisibility = {}; rirVisibility = {};
     roomInitialized = false; updateAll();
   };
-  document.getElementById('btn-prev-src').onclick = () => {
-    selSrc = (selSrc - 1 + getRoom().sources.length) % getRoom().sources.length; selRec = 0; updateAll();
-  };
-  document.getElementById('btn-next-src').onclick = () => {
-    selSrc = (selSrc + 1) % getRoom().sources.length; selRec = 0; updateAll();
+  document.getElementById('btn-next-room').onclick = () => {
+    selRoom = (selRoom + 1) % D.rooms.length;
+    selSrc = 0; selRec = 0; refKey = null;
+    edcSavedRanges = null; rirSavedRanges = null;
+    edcVisibility = {}; rirVisibility = {};
+    roomInitialized = false; updateAll();
   };
   document.getElementById('btn-prev-rec').onclick = () => {
     selRec = (selRec - 1 + getRoom().receivers.length) % getRoom().receivers.length; updateAll();
@@ -652,15 +660,6 @@ async function init() {
     msg.textContent = 'Rendering…';
 
     initColors();
-
-    // Populate room selector
-    const roomSel = document.getElementById('room-sel');
-    D.rooms.forEach((r, i) => {
-      const o = document.createElement('option');
-      o.value = i; o.textContent = r.display_name;
-      roomSel.appendChild(o);
-    });
-
     wireEvents();
     updateAll();
     registerPlotEvents();  // must be after first render so Plotly elements exist
