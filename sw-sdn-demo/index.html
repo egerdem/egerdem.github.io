@@ -116,6 +116,7 @@ select {
 <!-- ── Top bar ────────────────────────────────────────────────────────────── -->
 <div id="topbar">
   <a href="/sw-sdn/" style="color:var(--dim);font-size:12px;text-decoration:none;white-space:nowrap;padding:4px 0;">← Paper</a>
+  <select id="room-sel" style="min-width:160px"></select>
   <div id="src-nav">
     <button class="btn icon" id="btn-prev-src">←</button>
     <span id="src-name">—</span>
@@ -201,6 +202,7 @@ select {
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let D        = null;   // parsed data.json
+let selRoom  = 0;
 let selSrc   = 0;
 let selRec   = 0;
 let refKey   = null;   // exp_key of reference experiment
@@ -208,17 +210,23 @@ let trange   = 0.05;   // seconds or 'full'
 let curLayout = 'monitor';
 let roomInitialized = false;
 
-// ── Color palette (assigned once to exp_keys in order) ────────────────────────
+// ── Color palette — fixed global order ensures same method = same color across rooms ──
 const PALETTE = [
   '#61dafb','#ff6b6b','#ffd93d','#6bcb77','#c77dff',
   '#ff9f43','#48dbfb','#ff6b9d','#a8e063','#f8b739',
   '#74b9ff','#fd79a8','#55efc4','#e17055','#a29bfe',
   '#00b894','#fdcb6e','#e84393','#00cec9','#6c5ce7',
 ];
+const GLOBAL_KEY_ORDER = [
+  'ISM/order100_rand','RIMPY/negref','RIMPY/neg10',
+  'SDN/sw-3','SDN/sw-1','SDN/original',
+  'SDN/sw3','SDN/sw5','SDN/sw6','SDN/sw7',
+  'HO-SDN/N2','HO-SDN/N3',
+];
 const KEY_COLOR = {};
 
 function initColors() {
-  D.exp_keys.forEach((k, i) => { KEY_COLOR[k] = PALETTE[i % PALETTE.length]; });
+  GLOBAL_KEY_ORDER.forEach((k, i) => { KEY_COLOR[k] = PALETTE[i % PALETTE.length]; });
 }
 
 function colorFor(method, param_set) {
@@ -226,8 +234,9 @@ function colorFor(method, param_set) {
 }
 
 // ── Accessors ─────────────────────────────────────────────────────────────────
-function posIdx()    { return selSrc * D.receivers.length + selRec; }
-function getPos()    { return D.positions[posIdx()]; }
+function getRoom()   { return D.rooms[selRoom]; }
+function posIdx()    { return selSrc * getRoom().receivers.length + selRec; }
+function getPos()    { return getRoom().positions[posIdx()]; }
 
 // ── RMSE helper ───────────────────────────────────────────────────────────────
 function rmse(a, b, nMax) {
@@ -268,34 +277,35 @@ function darkLayout(title, xLabel, yLabel, xr, yr) {
 
 // ── Room plot ─────────────────────────────────────────────────────────────────
 function renderRoom() {
-  const W = D.meta.room.width, H = D.meta.room.depth;
+  const rm = getRoom();
+  const W = rm.room.width, H = rm.room.depth;
 
   // Dim: all receivers
   const rTrace = {
-    x: D.receivers.map(r => r[0]),
-    y: D.receivers.map(r => r[1]),
+    x: rm.receivers.map(r => r[0]),
+    y: rm.receivers.map(r => r[1]),
     mode: 'markers',
     marker: { color: '#4CAF50', size: 9, opacity: 0.22,
                line: { color: '#4CAF50', width: 1 } },
-    customdata: D.receivers.map((_, i) => ['rec', i]),
-    hovertext: D.receivers.map((r, i) => `Rec ${i+1}: (${r[0]}, ${r[1]}, ${r[2]})`),
+    customdata: rm.receivers.map((_, i) => ['rec', i]),
+    hovertext: rm.receivers.map((r, i) => `Rec ${i+1}: (${r[0]}, ${r[1]}, ${r[2]})`),
     hoverinfo: 'text', name: 'Receivers', showlegend: false, type: 'scatter',
   };
 
   // Dim: all sources
   const sTrace = {
-    x: D.sources.map(s => s.position[0]),
-    y: D.sources.map(s => s.position[1]),
+    x: rm.sources.map(s => s.position[0]),
+    y: rm.sources.map(s => s.position[1]),
     mode: 'markers',
     marker: { color: '#f44336', size: 14, opacity: 0.25, symbol: 'star',
                line: { color: '#f44336', width: 1 } },
-    customdata: D.sources.map((_, i) => ['src', i]),
-    hovertext: D.sources.map(s => `${s.label}`),
+    customdata: rm.sources.map((_, i) => ['src', i]),
+    hovertext: rm.sources.map(s => `${s.label}`),
     hoverinfo: 'text', name: 'Sources', showlegend: false, type: 'scatter',
   };
 
   // Active receiver
-  const ar = D.receivers[selRec];
+  const ar = rm.receivers[selRec];
   const arTrace = {
     x: [ar[0]], y: [ar[1]], mode: 'markers',
     marker: { color: '#4CAF50', size: 14, line: { color: 'white', width: 2 } },
@@ -304,7 +314,7 @@ function renderRoom() {
   };
 
   // Active source
-  const as = D.sources[selSrc];
+  const as = rm.sources[selSrc];
   const asTrace = {
     x: [as.position[0]], y: [as.position[1]], mode: 'markers',
     marker: { color: '#f44336', size: 16, symbol: 'star', line: { color: 'white', width: 2 } },
@@ -352,7 +362,7 @@ function renderRoom() {
 // ── EDC plot ──────────────────────────────────────────────────────────────────
 function renderEDC() {
   const pos = getPos();
-  const t   = D.meta.edc_time;
+  const t   = getRoom().edc_time;
   const xr  = xRange(trange, t.at(-1));
 
   const traces = pos.experiments.map(exp => ({
@@ -369,7 +379,7 @@ function renderEDC() {
 // ── RIR plot ──────────────────────────────────────────────────────────────────
 function renderRIR() {
   const pos = getPos();
-  const t   = D.meta.rir_time;
+  const t   = getRoom().rir_time;
   const xr  = xRange(trange, t.at(-1));
 
   const traces = pos.experiments.map(exp => ({
@@ -389,9 +399,10 @@ function renderTable() {
   const exps = pos.experiments;
 
   // n_50ms and n_500ms: how many EDC points correspond to those durations
-  const dt    = D.meta.edc_time[1] - D.meta.edc_time[0];
-  const n50   = Math.min(Math.ceil(0.05  / dt), D.meta.edc_time.length);
-  const n500  = Math.min(Math.ceil(0.500 / dt), D.meta.edc_time.length);
+  const edc_t = getRoom().edc_time;
+  const dt    = edc_t[1] - edc_t[0];
+  const n50   = Math.min(Math.ceil(0.05  / dt), edc_t.length);
+  const n500  = Math.min(Math.ceil(0.500 / dt), edc_t.length);
 
   const refExp = exps.find(e => `${e.method}/${e.param_set}` === refKey);
 
@@ -440,17 +451,18 @@ function buildRefSel() {
 
 // ── Source / receiver dropdowns ───────────────────────────────────────────────
 function buildDropdowns() {
+  const rm = getRoom();
   const ss = document.getElementById('src-sel');
   const rs = document.getElementById('rec-sel');
   ss.innerHTML = '';
-  D.sources.forEach((s, i) => {
+  rm.sources.forEach((s, i) => {
     const o = document.createElement('option');
     o.value = i; o.textContent = s.label;
     if (i === selSrc) o.selected = true;
     ss.appendChild(o);
   });
   rs.innerHTML = '';
-  D.receivers.forEach((r, i) => {
+  rm.receivers.forEach((r, i) => {
     const o = document.createElement('option');
     const fmt = v => parseFloat(v.toFixed(2));
     o.value = i; o.textContent = `R${i+1}  (${fmt(r[0])}, ${fmt(r[1])})`;
@@ -461,9 +473,10 @@ function buildDropdowns() {
 
 // ── Top bar + pos info ────────────────────────────────────────────────────────
 function updateHeader() {
-  const rm  = D.meta.room;
-  const src = D.sources[selSrc];
-  const rec = D.receivers[selRec];
+  const room = getRoom();
+  const rm  = room.room;
+  const src = room.sources[selSrc];
+  const rec = room.receivers[selRec];
   document.getElementById('src-name').textContent = src.label;
   document.getElementById('room-title').textContent =
     `${rm.display_name}  (${rm.width} × ${rm.depth} × ${rm.height} m,  α = ${rm.absorption})`;
@@ -471,7 +484,7 @@ function updateHeader() {
   const S    = 2*(rm.width*rm.depth + rm.width*rm.height + rm.depth*rm.height);
   const rt60 = (0.161 * V / (S * rm.absorption)).toFixed(2);
   document.getElementById('room-sub').textContent =
-    `Sabine RT60 ≈ ${rt60} s  |  Receiver ${selRec+1} / ${D.receivers.length}`;
+    `Sabine RT60 ≈ ${rt60} s  |  Receiver ${selRec+1} / ${room.receivers.length}`;
   const f2 = v => (+v).toFixed(2);
   document.getElementById('pos-info').innerHTML =
     `Src: (${src.position.map(f2).join(', ')})<br>Rec: (${rec.map(f2).join(', ')})`;
@@ -508,17 +521,21 @@ function applyLayout(l) {
 
 // ── Wire all non-Plotly events ────────────────────────────────────────────────
 function wireEvents() {
+  document.getElementById('room-sel').onchange = e => {
+    selRoom = +e.target.value; selSrc = 0; selRec = 0; refKey = null;
+    roomInitialized = false; updateAll();
+  };
   document.getElementById('btn-prev-src').onclick = () => {
-    selSrc = (selSrc - 1 + D.sources.length) % D.sources.length; selRec = 0; updateAll();
+    selSrc = (selSrc - 1 + getRoom().sources.length) % getRoom().sources.length; selRec = 0; updateAll();
   };
   document.getElementById('btn-next-src').onclick = () => {
-    selSrc = (selSrc + 1) % D.sources.length; selRec = 0; updateAll();
+    selSrc = (selSrc + 1) % getRoom().sources.length; selRec = 0; updateAll();
   };
   document.getElementById('btn-prev-rec').onclick = () => {
-    selRec = (selRec - 1 + D.receivers.length) % D.receivers.length; updateAll();
+    selRec = (selRec - 1 + getRoom().receivers.length) % getRoom().receivers.length; updateAll();
   };
   document.getElementById('btn-next-rec').onclick = () => {
-    selRec = (selRec + 1) % D.receivers.length; updateAll();
+    selRec = (selRec + 1) % getRoom().receivers.length; updateAll();
   };
 
   document.getElementById('src-sel').onchange = e => {
@@ -538,8 +555,8 @@ function wireEvents() {
   document.querySelectorAll('input[name="tr"]').forEach(r => {
     r.onchange = e => {
       trange = e.target.value === 'full' ? 'full' : parseFloat(e.target.value);
-      const xrEDC = xRange(trange, D.meta.edc_time.at(-1));
-      const xrRIR = xRange(trange, D.meta.rir_time.at(-1));
+      const xrEDC = xRange(trange, getRoom().edc_time.at(-1));
+      const xrRIR = xRange(trange, getRoom().rir_time.at(-1));
       Plotly.relayout('edc-plot', { 'xaxis.range': xrEDC });
       Plotly.relayout('rir-plot', { 'xaxis.range': xrRIR });
     };
@@ -566,6 +583,15 @@ async function init() {
     msg.textContent = 'Rendering…';
 
     initColors();
+
+    // Populate room selector
+    const roomSel = document.getElementById('room-sel');
+    D.rooms.forEach((r, i) => {
+      const o = document.createElement('option');
+      o.value = i; o.textContent = r.display_name;
+      roomSel.appendChild(o);
+    });
+
     wireEvents();
     updateAll();
 
