@@ -475,6 +475,16 @@ function buildRefSel() {
     if (ek === prev) opt.selected = true;
     sel.appendChild(opt);
   });
+  // Default to ISM (or RIM-Py as fallback) if no reference chosen yet
+  if (!prev) {
+    const def = pos.experiments.find(e => e.method === 'ISM')
+             || pos.experiments.find(e => e.method === 'RIMPY')
+             || pos.experiments[0];
+    if (def) {
+      refKey = `${def.method}/${def.param_set}`;
+      sel.value = refKey;
+    }
+  }
   refKey = sel.value || null;
 }
 
