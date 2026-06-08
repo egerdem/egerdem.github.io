@@ -93,7 +93,22 @@ select {
   padding: 3px 8px; border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
-#exp-table tr.is-ref td { background: rgba(97,218,251,0.08); }
+#exp-table tr.is-ref      td { background: rgba(97,218,251,0.08); }
+#exp-table tr.is-sdn-orig td { background: rgba(255,160,50,0.10); }  /* SDN original — always amber */
+#exp-table tr.is-best     td { background: rgba(80,220,120,0.13); }  /* min RMSE row — green */
+#exp-table tr.is-sdn-orig.is-best td { background: rgba(80,220,120,0.13); } /* best wins if both */
+
+/* ── Summary table ── */
+#summary-table th, #summary-table td {
+  background: var(--paper); color: var(--text);
+  padding: 2px 5px; border-bottom: 1px solid var(--border);
+  white-space: nowrap; text-align: right;
+}
+#summary-table th { background: var(--header); text-align: left; }
+#summary-table td:first-child { text-align: left; }
+#summary-table tr.is-sdn-orig td { background: rgba(255,160,50,0.10); }
+#summary-table tr.is-best-sum  td { background: rgba(80,220,120,0.13); }
+.summary-metric-btn.active { background: var(--accent); color: #1a1a1a; }
 .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; flex-shrink: 0; }
 
 /* ── Right panel ── */
@@ -148,8 +163,8 @@ select {
 
     <!-- Plots -->
     <div id="plot-row">
-      <div class="plot-box"><div id="edc-plot" style="height:38vh"></div></div>
-      <div class="plot-box"><div id="rir-plot" style="height:38vh"></div></div>
+      <div class="plot-box"><div id="edc-plot" style="height:52vh"></div></div>
+      <div class="plot-box"><div id="rir-plot" style="height:52vh"></div></div>
     </div>
 
     <!-- Table -->
@@ -166,7 +181,8 @@ select {
             <th>Experiment</th>
             <th>RT60</th>
             <th>RMSE [0–50ms]</th>
-            <th>RMSE [0–500ms]</th>
+            <th title="|C50_method − C50_ref| at this receiver">|ΔC50| (dB)</th>
+            <th title="|C80_method − C80_ref| at this receiver">|ΔC80| (dB)</th>
           </tr>
         </thead>
         <tbody id="exp-tbody"></tbody>
@@ -191,6 +207,27 @@ select {
       <button class="btn icon" id="btn-next-rec">→</button>
     </div>
     <div id="pos-info"></div>
+
+    <!-- Summary table: mean ± σ across all 16 receivers -->
+    <div id="summary-section" style="margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
+        <span style="color:var(--dim);font-size:11px">Summary (mean ± σ, all rec):</span>
+        <span id="summary-metric-btns" style="display:flex;gap:3px">
+          <button class="btn summary-metric-btn" data-m="rmse" style="font-size:11px;padding:1px 6px">RMSE</button>
+          <button class="btn summary-metric-btn" data-m="rt60" style="font-size:11px;padding:1px 6px">RT60</button>
+          <button class="btn summary-metric-btn" data-m="c50"  style="font-size:11px;padding:1px 6px">|ΔC50|</button>
+          <button class="btn summary-metric-btn" data-m="c80"  style="font-size:11px;padding:1px 6px">|ΔC80|</button>
+        </span>
+      </div>
+      <table id="summary-table" style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead>
+          <tr id="summary-thead-row">
+            <th style="background:var(--header);padding:3px 5px;text-align:left;white-space:nowrap">Method</th>
+          </tr>
+        </thead>
+        <tbody id="summary-tbody"></tbody>
+      </table>
+    </div>
   </div>
 
 </div><!-- #main -->
@@ -201,21 +238,22 @@ select {
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let D        = null;   // parsed data.json
-let selRoom  = 1;  // default: full grid
+let selRoom  = 0;  // default: full grid (index 0 when QG is disabled)
 let selSrc   = 0;
 let selRec   = 0;
 let refKey   = null;   // exp_key of reference experiment
 let trange   = 0.05;   // seconds or 'full'
 let curLayout = 'monitor';
 let roomInitialized = false;
+let summaryMetric = 'rmse';  // 'rmse' | 'c50' | 'c80'
 
 // Persisted zoom: set by user pan/zoom, cleared on time-range or room change
 let edcSavedRanges = null;   // {x:[min,max], y:[min,max]} or null
 let rirSavedRanges = null;
 
-// Persisted legend visibility: trace name -> true | 'legendonly'
-let edcVisibility = {};
-let rirVisibility = {};
+// Persisted legend visibility: trace name -> true | 'legendonly' (shared between both plots)
+let traceVisibility = {};
+let syncingVis = false;
 
 // ── Color palette — fixed global order ensures same method = same color across rooms ──
 const PALETTE = [
@@ -290,7 +328,7 @@ function darkLayout(title, xLabel, yLabel, xr, yr, legendCfg) {
     },
     showlegend: true,
     legend: legendCfg || {
-      x: 0.01, y: 0.02, xanchor: 'left', yanchor: 'bottom',
+      x: 0.99, y: 0.02, xanchor: 'right', yanchor: 'bottom',
       bgcolor: 'rgba(28,32,40,0.88)', bordercolor: 'rgba(255,255,255,0.13)',
       borderwidth: 1, font: { size: 8.5 }, tracegroupgap: 1,
     },
@@ -392,7 +430,7 @@ function renderEDC() {
     x: t, y: exp.edc,
     type: 'scatter', mode: 'lines',
     name: exp.label,
-    visible: edcVisibility[exp.label] !== undefined ? edcVisibility[exp.label] : true,
+    visible: traceVisibility[exp.label] !== undefined ? traceVisibility[exp.label] : true,
     line: { color: colorFor(exp.method, exp.param_set), width: 1.5 },
     hovertemplate: '%{y:.2f} dB<extra></extra>',
   }));
@@ -412,13 +450,20 @@ function renderRIR() {
     x: t, y: exp.rir,
     type: 'scatter', mode: 'lines',
     name: exp.label,
-    visible: rirVisibility[exp.label] !== undefined ? rirVisibility[exp.label] : true,
+    visible: traceVisibility[exp.label] !== undefined ? traceVisibility[exp.label] : true,
     line: { color: colorFor(exp.method, exp.param_set), width: 1 },
     hovertemplate: '%{y:.4f}<extra></extra>',
   }));
 
+  // Fixed symmetric y-range from ALL traces (visibility-independent)
+  let peak = 0;
+  for (const exp of pos.experiments)
+    for (const v of exp.rir) { const a = Math.abs(v); if (a > peak) peak = a; }
+  const defaultYr = peak > 0 ? [-(peak * 1.05), peak * 1.05] : [-1.05, 1.05];
+
   const xr = rirSavedRanges ? rirSavedRanges.x : rirDefaultXRange();
-  const lay = darkLayout('Room Impulse Response', 'Time (s)', 'Amplitude', xr, null);
+  const yr = rirSavedRanges?.y ?? defaultYr;
+  const lay = darkLayout('Room Impulse Response', 'Time (s)', 'Amplitude', xr, yr);
   Plotly.react('rir-plot', traces, lay, { responsive: true });
 }
 
@@ -431,33 +476,146 @@ function renderTable() {
   const edc_t = getRoom().edc_time;
   const dt    = edc_t[1] - edc_t[0];
   const n50   = Math.min(Math.ceil(0.05  / dt), edc_t.length);
-  const n500  = Math.min(Math.ceil(0.500 / dt), edc_t.length);
 
   const refExp = exps.find(e => `${e.method}/${e.param_set}` === refKey);
+
+  // Pre-compute all RMSE values to find the minimum
+  const rmse50s = exps.map(exp => {
+    const ek = `${exp.method}/${exp.param_set}`;
+    if (!refExp || ek === refKey) return null;
+    return parseFloat(rmse(refExp.edc, exp.edc, n50));
+  });
+  const validRmse = rmse50s.filter(v => v !== null && isFinite(v));
+  const minRmse50 = validRmse.length ? Math.min(...validRmse) : null;
 
   const tbody = document.getElementById('exp-tbody');
   tbody.innerHTML = '';
 
   exps.forEach((exp, i) => {
-    const ek    = `${exp.method}/${exp.param_set}`;
-    const isRef = (ek === refKey);
-    const tr    = document.createElement('tr');
-    if (isRef) tr.classList.add('is-ref');
+    const ek      = `${exp.method}/${exp.param_set}`;
+    const isRef   = (ek === refKey);
+    const isSdnOrig = (exp.method === 'SDN' && exp.param_set === 'original');
+    const isBest  = (minRmse50 !== null && rmse50s[i] !== null &&
+                     Math.abs(rmse50s[i] - minRmse50) < 1e-9);
 
-    let r50 = '—', r500 = '—';
-    if (refExp && !isRef) {
-      r50  = rmse(refExp.edc, exp.edc, n50);
-      r500 = rmse(refExp.edc, exp.edc, n500);
-    } else if (!refExp) {
-      r50 = r500 = 'N/A';
-    }
+    const tr = document.createElement('tr');
+    if (isRef)    tr.classList.add('is-ref');
+    if (isSdnOrig && !isRef) tr.classList.add('is-sdn-orig');
+    if (isBest)   tr.classList.add('is-best');
+
+    const r50  = rmse50s[i] !== null ? rmse50s[i].toFixed(2) : (isRef ? '—' : 'N/A');
+
+    const refC50 = refExp ? refExp.c50 : null;
+    const refC80 = refExp ? refExp.c80 : null;
+    const c50v = (!isRef && exp.c50 !== null && exp.c50 !== undefined && refC50 !== null)
+               ? Math.abs(exp.c50 - refC50).toFixed(2) : (isRef ? '—' : '—');
+    const c80v = (!isRef && exp.c80 !== null && exp.c80 !== undefined && refC80 !== null)
+               ? Math.abs(exp.c80 - refC80).toFixed(2) : (isRef ? '—' : '—');
+
+    // badges after label
+    const badges = (isSdnOrig && !isRef ? ' <span style="font-size:9px;color:#ffa030;opacity:.8">orig</span>' : '')
+                 + (isBest              ? ' <span style="font-size:9px;color:#50dc78;opacity:.9">★ best</span>' : '');
 
     tr.innerHTML =
       `<td>${i+1}</td>` +
-      `<td><span class="dot" style="background:${colorFor(exp.method, exp.param_set)}"></span>${exp.label}${isRef ? ' ★' : ''}</td>` +
-      `<td>${exp.rt60 !== null ? exp.rt60 + ' s' : '—'}</td>` +
+      `<td><span class="dot" style="background:${colorFor(exp.method, exp.param_set)}"></span>${exp.label}${isRef ? ' ★' : ''}${badges}</td>` +
+      `<td>${exp.rt60 !== null ? exp.rt60.toFixed(2) + ' s' : '—'}</td>` +
       `<td>${r50}</td>` +
-      `<td>${r500}</td>`;
+      `<td>${c50v}</td>` +
+      `<td>${c80v}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Summary table (mean ± σ per source, all receivers) ────────────────────────
+function renderSummaryTable() {
+  const room = getRoom();
+
+  // Fixed source column order — label-to-short display name
+  const SRC_ORDER = ['Center_Source','Top_Middle_Source','Lower_Left_Source','Upper_Right_Source'];
+  const SRC_SHORT = {
+    Center_Source:      'Ctr',
+    Top_Middle_Source:  'T-Mid',
+    Lower_Left_Source:  'L-Left',
+    Upper_Right_Source: 'U-Rt',
+  };
+  const srcLabels = room.sources.map(s => s.label);
+  const cols = SRC_ORDER.filter(s => srcLabels.includes(s));
+
+  // For each source, grab position[rec=0] to read precomputed aggregates
+  const srcPos0 = {};
+  cols.forEach(sl => {
+    srcPos0[sl] = room.positions.find(p => p.source_label === sl && p.receiver_idx === 0);
+  });
+
+  // Metric accessors
+  const METRICS = {
+    rmse: { mean: 'mean_rmse50', std: 'std_rmse50', dp: 2 },
+    rt60: { mean: 'mean_rt60',   std: 'std_rt60',   dp: 2 },
+    c50:  { mean: 'mean_c50',    std: 'std_c50',    dp: 2 },
+    c80:  { mean: 'mean_c80',    std: 'std_c80',    dp: 2 },
+  };
+  const { mean: mk, std: sk, dp } = METRICS[summaryMetric];
+
+  // Update active button style
+  document.querySelectorAll('.summary-metric-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.m === summaryMetric));
+
+  // Build header
+  const thead = document.getElementById('summary-thead-row');
+  thead.innerHTML = `<th style="background:var(--header);padding:3px 5px;text-align:left;white-space:nowrap">Method</th>` +
+    cols.map(sl => `<th style="background:var(--header);padding:3px 5px;white-space:nowrap">${SRC_SHORT[sl]}</th>`).join('');
+
+  const allMethods = room.exp_keys;
+
+  // Per-column: find the exp_key of the best method.
+  // RMSE    → lowest value (already a distance from ISM).
+  // C50/C80 → closest absolute distance to the fixed ISM reference value.
+  const colBestEk = {};
+  cols.forEach(sl => {
+    const pos = srcPos0[sl];
+    if (!pos) { colBestEk[sl] = null; return; }
+
+    // Highlight always tracks the RMSE-best method, regardless of displayed metric
+    let best = Infinity, bestEk = null;
+    pos.experiments.forEach(exp => {
+      const v = exp['mean_rmse50'];
+      if (v === null || v === undefined) return;
+      if (v < best) { best = v; bestEk = `${exp.method}/${exp.param_set}`; }
+    });
+    colBestEk[sl] = bestEk;
+  });
+
+  const tbody = document.getElementById('summary-tbody');
+  tbody.innerHTML = '';
+
+  allMethods.forEach(ek => {
+    // Get experiment from any source's pos0 to read label/method/param_set
+    let meta = null;
+    for (const sl of cols) {
+      const pos = srcPos0[sl];
+      if (pos) { meta = pos.experiments.find(e => `${e.method}/${e.param_set}` === ek); }
+      if (meta) break;
+    }
+    if (!meta) return;
+
+    const isSdnOrig = (meta.method === 'SDN' && meta.param_set === 'original');
+    const tr = document.createElement('tr');
+    if (isSdnOrig) tr.classList.add('is-sdn-orig');
+
+    let html = `<td><span class="dot" style="background:${colorFor(meta.method,meta.param_set)}"></span>${meta.label}</td>`;
+    cols.forEach(sl => {
+      const pos = srcPos0[sl];
+      const exp = pos ? pos.experiments.find(e => `${e.method}/${e.param_set}` === ek) : null;
+      if (!exp) { html += `<td>—</td>`; return; }
+      const mv = exp[mk], sv = exp[sk];
+      if (mv === null || mv === undefined) { html += `<td>—</td>`; return; }
+      const isBest = (colBestEk[sl] !== null && ek === colBestEk[sl]);
+      const cellStyle = isBest ? ' style="color:#50dc78;font-weight:bold"' : '';
+      const sdStr = (sv !== null && sv !== undefined) ? `<span style="color:var(--dim);font-size:10px"> ±${sv.toFixed(dp)}</span>` : '';
+      html += `<td${cellStyle}>${mv.toFixed(dp)}${sdStr}</td>`;
+    });
+    tr.innerHTML = html;
     tbody.appendChild(tr);
   });
 }
@@ -545,10 +703,9 @@ function registerPlotEvents() {
     });
   }
 
-  function captureVisibility(elId, visStore) {
-    // plotly_restyle emits a single array: [updateObj, traceIndices]
+  function captureVisibility(elId, otherRenderFn) {
     document.getElementById(elId).on('plotly_restyle', (eventData) => {
-      if (!Array.isArray(eventData)) return;
+      if (syncingVis || !Array.isArray(eventData)) return;
       const update  = eventData[0];
       const indices = eventData[1];
       if (!update || update.visible === undefined || !Array.isArray(indices)) return;
@@ -559,8 +716,14 @@ function registerPlotEvents() {
       indices.forEach((ti, i) => {
         const trace = plot.data[ti];
         if (trace && trace.name)
-          visStore[trace.name] = visArr[i] !== undefined ? visArr[i] : visArr[0];
+          traceVisibility[trace.name] = visArr[i] !== undefined ? visArr[i] : visArr[0];
       });
+      // defer so Plotly finishes the current click before we re-render the other plot
+      setTimeout(() => {
+        syncingVis = true;
+        otherRenderFn();
+        syncingVis = false;
+      }, 0);
     });
   }
 
@@ -569,8 +732,18 @@ function registerPlotEvents() {
   const rirRef = { get val() { return rirSavedRanges; }, set val(v) { rirSavedRanges = v; } };
   captureRelayout('edc-plot', edcRef);
   captureRelayout('rir-plot', rirRef);
-  captureVisibility('edc-plot', edcVisibility);
-  captureVisibility('rir-plot', rirVisibility);
+  captureVisibility('edc-plot', renderRIR);
+  captureVisibility('rir-plot', renderEDC);
+}
+
+// ── Align summary section with main table header ──────────────────────────────
+function alignSummary() {
+  const th  = document.querySelector('#exp-table thead th');
+  const sec = document.getElementById('summary-section');
+  if (!th || !sec) return;
+  sec.style.marginTop = '0';
+  const gap = th.getBoundingClientRect().top - sec.getBoundingClientRect().top;
+  sec.style.marginTop = Math.max(0, gap) + 'px';
 }
 
 // ── Master update ─────────────────────────────────────────────────────────────
@@ -582,6 +755,8 @@ function updateAll() {
   renderEDC();
   renderRIR();
   renderTable();
+  renderSummaryTable();
+  alignSummary();
 }
 
 // ── Layout switch (just changes flex direction) ───────────────────────────────
@@ -595,7 +770,6 @@ function applyLayout(l) {
     row.style.flexDirection = 'row';
     row.querySelectorAll('.plot-box').forEach(b => b.style.width = '');
   }
-  // Trigger Plotly resize so axes fit
   setTimeout(() => {
     Plotly.relayout('edc-plot', {autosize: true});
     Plotly.relayout('rir-plot', {autosize: true});
@@ -608,14 +782,14 @@ function wireEvents() {
     selRoom = (selRoom - 1 + D.rooms.length) % D.rooms.length;
     selSrc = 0; selRec = 0; refKey = null;
     edcSavedRanges = null; rirSavedRanges = null;
-    edcVisibility = {}; rirVisibility = {};
+    traceVisibility = {};
     roomInitialized = false; updateAll();
   };
   document.getElementById('btn-next-room').onclick = () => {
     selRoom = (selRoom + 1) % D.rooms.length;
     selSrc = 0; selRec = 0; refKey = null;
     edcSavedRanges = null; rirSavedRanges = null;
-    edcVisibility = {}; rirVisibility = {};
+    traceVisibility = {};
     roomInitialized = false; updateAll();
   };
   document.getElementById('btn-prev-rec').onclick = () => {
@@ -648,6 +822,10 @@ function wireEvents() {
       renderRIR();
     };
   });
+
+  document.querySelectorAll('.summary-metric-btn').forEach(b => {
+    b.onclick = () => { summaryMetric = b.dataset.m; renderSummaryTable(); };
+  });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -659,12 +837,14 @@ async function init() {
     msg.textContent = 'Fetching data…';
     bar.style.width = '20%';
 
-    const resp = await fetch('./data.json');
-    if (!resp.ok) throw new Error(`HTTP ${resp.status} — make sure data.json exists (run precompute.py first)`);
+    const resp = await fetch('./data.json.gz');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} — make sure data.json.gz exists (run precompute.py first)`);
 
     bar.style.width = '60%';
+    msg.textContent = 'Decompressing…';
+    const decompressed = new Response(resp.body.pipeThrough(new DecompressionStream('gzip')));
     msg.textContent = 'Parsing…';
-    D = await resp.json();
+    D = await decompressed.json();
 
     bar.style.width = '85%';
     msg.textContent = 'Rendering…';
@@ -673,6 +853,7 @@ async function init() {
     wireEvents();
     updateAll();
     registerPlotEvents();  // must be after first render so Plotly elements exist
+    window.addEventListener('resize', alignSummary);
 
     bar.style.width = '100%';
     await new Promise(r => setTimeout(r, 200));
