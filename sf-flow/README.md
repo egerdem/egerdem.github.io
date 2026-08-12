@@ -13,11 +13,12 @@ This is the repository that contains source code for the SF-Flow project website
 
 If you find SF-Flow useful for your work please cite:
 ```
-@article{erdem2025sfflow,
-  author    = {Erdem, Ege and Koyama, Shoichi and Nakamura, Tomohiko and Cvetkovi\'c, Zoran},
-  title     = {SF-Flow: Sound field magnitude estimation via flow matching guided by sparse measurements},
-  journal   = {},
-  year      = {2025},
+@inproceedings{erdem2026sfflow,
+  author    = {Erdem, Ege and Koyama, Shoichi and Nakamura, Tomohiko and Cvetkovi{\'c}, Zoran},
+  title     = {{SF-Flow}: Sound field magnitude estimation via flow matching guided by sparse measurements},
+  booktitle = {2026 19th International Workshop on Acoustic Signal Enhancement (IWAENC)},
+  year      = {2026},
+  note      = {Accepted}
 }
 ```
 
