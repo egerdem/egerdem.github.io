@@ -93,6 +93,11 @@
                 Tokyo, Japan</span>
             </div>
 
+            <div class="is-size-5 publication-authors" style="margin-top: 0.6rem;">
+              <span class="publication-venue">IWAENC 2026</span> &nbsp;&middot;&nbsp; 19th International Workshop on
+              Acoustic Signal Enhancement
+            </div>
+
 
             <div class="column has-text-centered">
               <div class="publication-links">
@@ -131,12 +136,96 @@
     </div>
   </section>
 
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <img src="./images/diag5.jpg"
+          alt="SF-Flow overview: a permutation-invariant set encoder conditions a 3D U-Net trained with flow matching."
+          style="width: 100%; height: auto;">
+        <h2 class="subtitle has-text-centered" style="margin-top: 1.2rem;">
+          <span class="dnerf">SF-Flow</span> reconstructs a <b>full 3D ATF magnitude cube</b> from an arbitrary number
+          of sparse microphone measurements. A permutation-invariant set encoder turns the observations and their
+          source-relative geometry into a conditioning context, which guides a 3D U-Net trained with the flow matching
+          objective.
+        </h2>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Abstract. -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Reconstructing a 3D sound field from sparse microphone measurements is a fundamental yet ill-posed problem,
+              which we address through Acoustic Transfer Function (ATF) magnitude estimation.
+              ATF magnitude encapsulates key perceptual and acoustic properties of a physical space with applications
+              in room characterization and correction. Although recent generative paradigms such as Flow Matching (FM)
+              have achieved state-of-the-art performance in speech and music generation, their potential in spatial
+              audio remains underexplored. We propose a novel framework for 3D ATF magnitude reconstruction as a
+              guided generation task, with a 3D U-Net conditioned by a permutation-invariant set encoder.
+              This architecture enables reconstruction from an arbitrary number of sparse inputs while
+              leveraging the stable and efficient training properties of FM. Experimental results demonstrate
+              that SF-Flow achieves accurate reconstruction up to 1kHz, trains substantially faster than the
+              autoencoder baseline, and improves significantly with dataset size.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!--/ Abstract. -->
+
+
+  <!-- Results. -->
+  <section class="section" style="padding-top: 0;">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-full">
+          <h2 class="title is-3">Results</h2>
+          <div class="content has-text-justified">
+            <p>
+              Reconstructed ATF magnitudes at three horizontal slices for three test sources, using
+              <b>M&nbsp;=&nbsp;5</b> observations, for the least accurate SF-Flow model trained on the full frequency
+              range (0&ndash;64 bins). At <i>f</i>&nbsp;=&nbsp;78&nbsp;Hz, both SF-Flow and AE accurately recover the
+              large-scale field structure; SF-Flow additionally preserves finer spatial detail in the low-magnitude
+              region. From <i>f</i>&nbsp;=&nbsp;312&nbsp;Hz, AE estimates become noticeably overly smooth, missing
+              spatial variation that SF-Flow still partially retains. This tendency intensifies at
+              <i>f</i>&nbsp;=&nbsp;921&nbsp;Hz, where SF-Flow retains realistic spatial variability despite its highest
+              LSD error, in contrast to AE's near-uniform field estimation, while training roughly an order of
+              magnitude faster (about 2.4&nbsp;hrs vs. 24&nbsp;h on the same device).
+            </p>
+          </div>
+          <img
+            src="./images/cr_krr_src58_src98_src77_f4_f19_f58_freqs_78Hz_312Hz_921Hz_z4_z3_z2_w1_lsd5.65_4.11_4.54.png"
+            alt="Estimated ATF magnitude slices at 78.1, 312.5 and 921.9 Hz for the ground truth, SF-Flow, AE and KRR."
+            style="width: 100%; height: auto;">
+          <div class="content has-text-justified" style="margin-top: 1rem;">
+            <p class="is-size-7">
+              Estimated ATF magnitudes on horizontal slices of the target volume at 78.1, 312.5 and 921.9&nbsp;Hz (one
+              frequency per row), for randomly selected sources and sparse microphone configurations from the test set.
+              The first column shows the sparse microphone positions, with colour indicating height; overlapping
+              markers share the same (x,&nbsp;y) coordinates at different heights. The remaining columns show the
+              ground-truth simulated field and the reconstructions by SF-Flow, AE and KRR. Colour bars are per row.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!--/ Results. -->
+
+
 
   <section class="section" id="BibTeX">
     <div class="container is-max-desktop content">
       <h2 class="title">BibTeX</h2>
       <pre><code>@inproceedings{erdem2026sfflow,
-  author    = {Erdem, Ege and Koyama, Shoichi and Nakamura, Tomohiko and Cvetkovi{\'c}, Zoran},
+  author    = {Erdem, Ege and Koyama, Shoichi and Nakamura, Tomohiko and Das, Orchisama and Cvetkovi{\'c}, Zoran},
   title     = {{SF-Flow}: Sound field magnitude estimation via flow matching guided by sparse measurements},
   booktitle = {2026 19th International Workshop on Acoustic Signal Enhancement (IWAENC)},
   year      = {2026},
