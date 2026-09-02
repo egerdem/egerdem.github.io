@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rentals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F3F1; --card:#FBFBFA; --ink:#1B2A2E; --soft:#5B6560;
+  --rule:#D2D8D4; --clear:#2E6B54; --short:#A34438; --unsure:#8A7038;
+  --sans:'Archivo',system-ui,sans-serif; --serif:'Newsreader',Georgia,serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+     font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:940px;margin:0 auto;padding:40px 24px 80px}
+
+/* masthead: the brief itself, stated plainly */
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:28px}
+h1{font-family:var(--serif);font-weight:400;font-size:36px;margin:0 0 6px;letter-spacing:-.01em}
+.scanbox{text-align:right;flex:0 0 auto;padding-top:8px}
+.scanmsg{font-size:12px;color:var(--soft);margin-top:6px;max-width:30ch;
+         font-variant-numeric:tabular-nums}
+.banner{display:none;background:#FBEDEA;border:1px solid #E4C4BC;color:#7A2E22;
+        border-radius:3px;padding:11px 14px;font-size:13px;line-height:1.55;
+        margin:0 0 18px;max-width:78ch}
+.banner.on{display:block}
+.btn.go{border-color:var(--ink);color:var(--ink);font-weight:500;padding:7px 15px}
+.btn.go:hover:not([disabled]){background:var(--ink);color:var(--card)}
+.btn.go.stopping{border-color:var(--short);color:var(--short)}
+.btn.go.stopping:hover:not([disabled]){background:var(--short);border-color:var(--short);color:var(--card)}
+.btn[disabled]{opacity:.45;cursor:default}
+@keyframes tick{0%,100%{opacity:.35}50%{opacity:1}}
+.scanning{animation:tick 1.4s ease-in-out infinite}
+.brief{font-size:14px;color:var(--soft);max-width:62ch;margin:0 0 28px}
+.brief b{font-weight:600;color:var(--ink)}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+     font:inherit;font-size:14px;color:var(--soft);padding:8px 14px;cursor:pointer}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+.tab .n{color:var(--soft);font-weight:400;font-variant-numeric:tabular-nums}
+
+/* the filters — a header on a phone, a panel on a desktop */
+.filters{border:1px solid var(--rule);border-top:0;background:var(--card);padding:0 18px}
+.filters > summary{list-style:none;cursor:pointer;padding:11px 0;font-size:13px;
+     color:var(--soft);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.filters > summary::-webkit-details-marker{display:none}
+.filters > summary:focus-visible{outline:2px solid var(--clear);outline-offset:2px}
+.filters > summary b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.filters .adj{color:var(--clear);white-space:nowrap}
+.filters .adj::after{content:"adjust ▾"}
+.filters[open] .adj::after{content:"hide ▴"}
+.filters[open] > summary{border-bottom:1px solid var(--rule)}
+.grid{display:grid;gap:10px;padding:14px 0 16px}
+.hint{grid-column:1/-1;font-size:12px;color:var(--soft);margin:-4px 0 0 106px;max-width:60ch}
+.line{display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:center}
+.line > .lab{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.fields{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.f{display:inline-flex;align-items:baseline;gap:6px;font-size:13px;color:var(--soft)}
+.f input,.f select{font:inherit;font-size:13px;color:var(--ink);background:var(--paper);
+     border:1px solid var(--rule);border-radius:3px;padding:4px 7px}
+.f input[type=number]{width:66px;font-variant-numeric:tabular-nums}
+.f input[type=date]{font-variant-numeric:tabular-nums}
+.f input:focus,.f select:focus{outline:2px solid var(--clear);outline-offset:1px;border-color:var(--clear)}
+.f input:not(:placeholder-shown){font-weight:600}
+.check{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--soft);cursor:pointer}
+.link{appearance:none;background:none;border:0;font:inherit;font-size:13px;color:var(--clear);
+      cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.link[disabled]{color:var(--rule);cursor:default;text-decoration:none}
+
+.row{display:grid;grid-template-columns:200px 1fr;gap:20px;padding:24px 0;
+     border-bottom:1px solid var(--rule);align-items:start}
+.shot{width:200px;aspect-ratio:4/3;object-fit:cover;border-radius:3px;background:var(--rule);display:block}
+.noshot{width:200px;aspect-ratio:4/3;border-radius:3px;background:var(--rule)}
+/* the floorplan, which is where the room sizes came from — worth seeing next
+   to the photo rather than behind a link. Contained, not cropped: cropping a
+   floorplan cuts off exactly the dimensions you want to check. */
+.plan{width:200px;aspect-ratio:3/4;object-fit:contain;object-position:top;
+      background:#fff;border:1px solid var(--rule);border-radius:3px;
+      display:block;margin-top:8px}
+.planwrap{position:relative;display:block}
+.plantag{position:absolute;left:6px;bottom:6px;background:rgba(251,251,250,.92);
+         border:1px solid var(--rule);border-radius:2px;font-size:11px;
+         color:var(--soft);padding:1px 6px;pointer-events:none}
+
+.price{font-family:var(--serif);font-size:27px;font-weight:400;letter-spacing:-.01em;
+       font-variant-numeric:tabular-nums;line-height:1.1}
+.price span{font-size:14px;color:var(--soft);font-family:var(--sans)}
+.addr{font-size:15px;color:#3C4A4E;margin:2px 0 8px}
+.addr a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.addr a:hover{border-bottom-color:var(--ink)}
+
+/* move-in date and the other flat facts */
+.facts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.chip{font-size:12px;border:1px solid var(--rule);border-radius:99px;padding:2px 9px;color:var(--soft)}
+.chip b{font-weight:600;color:var(--ink)}
+.chip.soon{border-color:#BCD3C6;background:#EDF4F0;color:#25543F}
+.chip.nodate{border-style:dashed}
+
+/* the measurement rail — the point of the whole page */
+.rail{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;
+      max-width:520px;font-size:13px}
+.rail dt{color:var(--soft);white-space:nowrap}
+.rail dd{margin:0;position:relative;height:9px;background:#E6E9E6;border-radius:2px}
+.rail dd i{position:absolute;inset:0 auto 0 0;border-radius:2px;display:block}
+.rail dd b{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--ink);opacity:.45}
+.rail .val{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;min-width:62px}
+.ok i{background:var(--clear)} .ok .val{color:var(--clear)}
+.bad i{background:var(--short)} .bad .val{color:var(--short)}
+.meh i{background:var(--unsure)} .meh .val{color:var(--unsure)}
+.railgap{height:8px;grid-column:1/-1}
+.sums{grid-column:1/-1;font-size:12px;color:var(--soft);font-variant-numeric:tabular-nums;
+      padding-top:2px}
+.via{grid-column:2/-1;font-size:12px;color:var(--soft);padding:0 0 4px}
+.via.bus{color:var(--unsure)}
+
+.note{font-size:13px;color:var(--soft);margin-top:12px;max-width:62ch}
+.warn{background:#F4EBD4;color:#5C4A15;border-radius:3px;padding:7px 11px;
+      font-size:13px;margin-bottom:12px;max-width:56ch}
+.acts{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+.btn{appearance:none;background:none;border:1px solid var(--rule);border-radius:3px;
+     font:inherit;font-size:13px;color:var(--soft);padding:5px 12px;cursor:pointer}
+.btn:hover{border-color:var(--ink);color:var(--ink)}
+.btn.on{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.btn:focus-visible,.tab:focus-visible{outline:2px solid var(--clear);outline-offset:2px}
+.empty{padding:64px 0;color:var(--soft);font-size:15px}
+.empty b{display:block;font-family:var(--serif);font-size:22px;color:var(--ink);
+         font-weight:400;margin-bottom:6px}
+@media(max-width:640px){
+  .row{grid-template-columns:1fr}.shot,.noshot{width:100%}
+  .line{grid-template-columns:1fr;gap:4px}
+  .fields{gap:8px 12px}
+  .head{flex-direction:column;gap:12px}
+  .scanbox{text-align:left;padding-top:0}
+  .hint{margin-left:0}
+}
+</style></head><body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>Places that fit</h1>
+      <p class="brief" id="brief"></p>
+    </div>
+    <div class="scanbox">
+      <button id="scan" hidden></button>
+      <div class="scanmsg">Static snapshot<br>updated 02 Sep 2026, 23:38 UTC</div>
+    </div>
+  </div>
+  <div class="banner" id="scanerr"></div>
+  <div class="tabs" id="tabs"></div>
+
+  <details class="filters" id="filters">
+    <summary><span id="tally"></span><span class="adj"></span></summary>
+    <div class="grid">
+    <div class="line">
+      <span class="lab">Move in</span>
+      <div class="fields">
+        <label class="f">not free before
+          <input type="date" id="mi_from" placeholder=" "></label>
+        <label class="f">and free by
+          <input type="date" id="mi_to" placeholder=" "></label>
+        <label class="check"><input type="checkbox" id="mi_unknown" checked>
+          include places that don't say</label>
+      </div>
+      <p class="hint">The date the listing says it's free. <b>Free by</b> is the one
+        you usually want — it drops places that aren't ready until after you need to
+        move. A place that's already empty counts as free today, so it stays in.</p>
+    </div>
+    <div class="line">
+      <span class="lab">Bedrooms</span>
+      <div class="fields">
+        <label class="f">smallest ≥
+          <input type="number" id="b_min" min="0" step="0.5" placeholder="any"> m²</label>
+        <label class="f">average ≥
+          <input type="number" id="b_avg" min="0" step="0.5" placeholder="any"> m²</label>
+        <label class="f">total ≥
+          <input type="number" id="b_tot" min="0" step="1" placeholder="any"> m²</label>
+      </div>
+    </div>
+    <div class="line">
+      <span class="lab">And</span>
+      <div class="fields">
+        <label class="f">rent ≤ £
+          <input type="number" id="f_price" min="0" step="50" placeholder="any"></label>
+        <label class="f">both commutes ≤
+          <input type="number" id="f_commute" min="0" step="5" placeholder="any"> min</label>
+        <label class="check"><input type="checkbox" id="f_rail">
+          no buses — tube, rail and DLR only</label>
+        <label class="f">sort by
+          <select id="f_sort">
+            <option value="newest">newest listed</option>
+            <option value="cheapest">cheapest</option>
+            <option value="soonest">soonest free</option>
+            <option value="latest">latest free</option>
+            <option value="biggest">most bedroom space</option>
+            <option value="smallroom">biggest small room</option>
+            <option value="commute">shortest commute</option>
+            <option value="looks">best looking</option>
+          </select></label>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <button class="link" id="reset">Clear</button>
+    </div>
+    </div>
+  </details>
+
+  <div id="list"></div>
+</div>
+<script>
+const S = {tab:'pass', data:null, F:{}};
+const KEY = 'rentals.filters.v1';
+const STATE_KEY = 'rentals.state.v1';
+const money = n => '£' + Math.round(n).toLocaleString('en-GB');
+const today = new Date().toISOString().slice(0,10);
+const num = v => (v === '' || v === null || v === undefined) ? null : Number(v);
+
+const CONTROLS = {
+  mi_from:'moveInFrom', mi_to:'moveInTo', mi_unknown:'includeUndated',
+  b_min:'minSmallest', b_avg:'minAvg', b_tot:'minTotal',
+  f_price:'maxPrice', f_commute:'maxCommute', f_rail:'railOnly', f_sort:'sort',
+};
+const el = id => document.getElementById(id);
+
+/* ---- reading and writing the filters -------------------------------- */
+function readControls(){
+  const F = {};
+  for(const [id, key] of Object.entries(CONTROLS)){
+    const node = el(id);
+    F[key] = node.type === 'checkbox' ? node.checked
+           : node.type === 'number'   ? num(node.value)
+           : node.value || null;
+  }
+  return F;
+}
+function writeControls(F){
+  for(const [id, key] of Object.entries(CONTROLS)){
+    const node = el(id), v = F[key];
+    if(node.type === 'checkbox') node.checked = (id === 'f_rail') ? !!v : v !== false;
+    else node.value = (v === null || v === undefined) ? '' : v;
+  }
+}
+function defaults(){
+  const d = S.data.defaults;
+  return {
+    // today unless config.yaml says otherwise: an anchor you can drag forward,
+    // and a no-op until you do, because already-empty places read as free today
+    moveInFrom: d.move_in_earliest || today, moveInTo: d.move_in_latest,
+    includeUndated: d.include_unknown_move_in !== false,
+    minSmallest: d.min_smallest_bedroom, minAvg: d.min_avg_bedroom_sqm,
+    minTotal: d.min_total_bedroom_sqm, maxPrice: d.max_price,
+    maxCommute: d.max_commute, railOnly: false, sort: d.sort || 'newest',
+  };
+}
+const isDefault = () => JSON.stringify(S.F) === JSON.stringify(defaults());
+
+/* ---- what a place measures ------------------------------------------ */
+const bedAreas = p => (p.rooms||[]).filter(r=>r.type==='bedroom' && r.area_sqm)
+                                   .map(r=>r.area_sqm).sort((a,b)=>b-a);
+const worstCommute = p => {
+  const t = S.data.thresholds.commutes.map(c => p.travel ? p.travel[c.name] : null);
+  return t.some(v => v == null) ? null : Math.max(...t);
+};
+
+/* A place we couldn't measure isn't a place that failed. Sizes, commutes and
+   looks all pass the filters when they're unknown — that's what the Needs a look
+   tab is full of, and hiding it there would defeat the point. Move-in dates go
+   missing often enough to deserve their own checkbox instead. */
+function passes(p, F){
+  if(F.maxPrice != null && p.price_pcm > F.maxPrice) return false;
+
+  const beds = bedAreas(p);
+  if(beds.length){
+    const total = sum(beds);
+    if(F.minSmallest != null && beds[beds.length-1] < F.minSmallest) return false;
+    if(F.minAvg != null && total/beds.length < F.minAvg) return false;
+    if(F.minTotal != null && total < F.minTotal) return false;
+  }
+
+  // A place that came free in August is free today, not in the past.
+  const when = p.available_from && (p.available_from < today ? today : p.available_from);
+  if(!when){ if(!F.includeUndated) return false; }
+  else {
+    if(F.moveInFrom && when < F.moveInFrom) return false;
+    if(F.moveInTo && when > F.moveInTo) return false;
+  }
+
+  const w = worstCommute(p);
+  if(F.maxCommute != null && w != null && w > F.maxCommute) return false;
+  // A route we know uses a bus fails this; one we never measured doesn't.
+  if(F.railOnly){
+    for(const c of S.data.thresholds.commutes){
+      const r = (p.routes || {})[c.name];
+      if(r && r.has_bus) return false;
+    }
+  }
+  return true;
+}
+
+const SORTS = {
+  newest:   (a,b) => (b.first_seen||'').localeCompare(a.first_seen||''),
+  cheapest: (a,b) => a.price_pcm - b.price_pcm,
+  soonest:  (a,b) => (a.available_from||'9999').localeCompare(b.available_from||'9999'),
+  latest:   (a,b) => (b.available_from||'0000').localeCompare(a.available_from||'0000'),
+  biggest:  (a,b) => sum(bedAreas(b)) - sum(bedAreas(a)),
+  smallroom:(a,b) => (small(b) ?? -1) - (small(a) ?? -1),
+  commute:  (a,b) => (worstCommute(a) ?? 999) - (worstCommute(b) ?? 999),
+  looks:    (a,b) => (b.aesthetic_score ?? -1) - (a.aesthetic_score ?? -1),
+};
+const sum = xs => xs.reduce((a,b)=>a+b, 0);
+const small = p => { const b = bedAreas(p); return b.length ? b[b.length-1] : null; };
+
+/* ---- drawing --------------------------------------------------------- */
+async function load(opts){
+  const at = (opts && opts.keepScroll) ? window.scrollY : null;
+  const r = await fetch('./data.json');
+  if(!r.ok) throw new Error(`Could not load listing snapshot (${r.status})`);
+  S.data = await r.json();
+  let states = {};
+  try { states = JSON.parse(localStorage.getItem(STATE_KEY) || '{}'); } catch(e) {}
+  for(const row of S.data.properties){ row.status = states[row.id] || null; }
+  const t = S.data.thresholds;
+  el('brief').innerHTML =
+    `Under <b>${money(t.max_price)} a month</b>, <b>${t.bedrooms_required} bedrooms</b> each over
+     <b>${t.min_bedroom_sqm} m²</b>, a separate living room, and under
+     <b>${t.commutes[0].max_minutes} minutes</b> to ` +
+     t.commutes.map(c=>c.name).join(' and ') + '.';
+
+  if(!S.loadedOnce){
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e) {}
+    S.F = Object.assign(defaults(), saved || {});
+  }
+  // A mid-scan refresh must not throw away controls you're in the middle of
+  // editing, nor jump you back to the top of the list.
+  if(!S.loadedOnce){ writeControls(S.F); S.loadedOnce = true; }
+  draw();
+  if(at !== null) window.scrollTo(0, at);
+}
+
+async function resumeScan(){
+  const st = await (await fetch('/api/scan')).json();
+  if(st.running){ S.scanWasRunning = true; pollScan(); } else { paintScan(st); }
+}
+
+function onSieveChange(){
+  S.F = readControls();
+  try { localStorage.setItem(KEY, JSON.stringify(S.F)); } catch(e) {}
+  draw();
+}
+
+function tabs(){
+  const p = S.data.properties;
+  const sets = [
+    ['pass',  'Fits',          p.filter(x=>x.verdict==='pass' && x.status!=='hidden')],
+    ['flag',  'Needs a look',  p.filter(x=>x.verdict==='flag' && x.status!=='hidden')],
+    ['short', 'Shortlisted',   p.filter(x=>x.status==='shortlisted')],
+    ['reject','Ruled out',     p.filter(x=>x.verdict==='reject')],
+  ];
+  el('tabs').innerHTML = sets.map(([k,label,rows])=>
+    `<button class="tab" role="tab" aria-selected="${S.tab===k}" data-tab="${k}">
+       ${label} <span class="n">${rows.filter(x=>passes(x,S.F)).length}</span></button>`).join('');
+  document.querySelectorAll('.tab').forEach(b=>
+    b.onclick = ()=>{ S.tab = b.dataset.tab; draw(); });
+  return new Map(sets.map(([k,,rows])=>[k,rows]));
+}
+
+function bar(label, value, threshold, scale, biggerIsBetter, unit){
+  const pct  = Math.min(100, Math.max(2, (value/scale)*100));
+  const tick = Math.min(100, (threshold/scale)*100);
+  const good = biggerIsBetter ? value >= threshold : value <= threshold;
+  return `<dt>${label}</dt>
+    <dd class="${good?'ok':'bad'}"><i style="width:${pct}%"></i><b style="left:${tick}%"></b></dd>
+    <span class="val ${good?'ok':'bad'}">${value}${unit}</span>`;
+}
+
+function rail(p, t){
+  const beds = (p.rooms||[]).filter(r=>r.type==='bedroom' && r.area_sqm)
+                            .sort((a,b)=>b.area_sqm-a.area_sqm);
+  const gate = S.F.minSmallest != null ? S.F.minSmallest : t.min_bedroom_sqm;
+  let html = '';
+  if(beds.length){
+    beds.forEach((b,i)=>{
+      html += bar(b.name||('Bedroom '+(i+1)), b.area_sqm, gate, 22, true, ' m²');
+    });
+    const areas = beds.map(b=>b.area_sqm), tot = sum(areas);
+    const from = {'floorplan-ocr':'read off the floorplan', 'floorplan':'read off the floorplan by Claude',
+                  'text':'from the description', 'text+llm':'from the description'}[p.room_source];
+    html += `<div class="sums">${beds.length} measured &nbsp;·&nbsp; ${tot.toFixed(1)} m² together
+             &nbsp;·&nbsp; ${(tot/beds.length).toFixed(1)} m² average`
+          + (from ? ` &nbsp;·&nbsp; ${from}` : '') + `</div>`;
+  } else {
+    html += `<dt>Bedrooms</dt><dd class="meh"><i style="width:100%;opacity:.25"></i></dd>
+             <span class="val meh">not published</span>`;
+  }
+  html += '<div class="railgap"></div>';
+  t.commutes.forEach(c=>{
+    const m = p.travel ? p.travel[c.name] : null;
+    const cap = S.F.maxCommute != null ? S.F.maxCommute : c.max_minutes;
+    html += (m == null)
+      ? `<dt>${c.name}</dt><dd class="meh"><i style="width:100%;opacity:.25"></i></dd>
+         <span class="val meh">no route</span>`
+      : bar(c.name, m, cap, 70, false, ' min');
+    const r = (p.routes || {})[c.name];
+    if(r && r.summary){
+      // What you'd actually be riding, and what the tube-only option costs
+      // if this route uses a bus.
+      const alt = (r.has_bus && r.rail_minutes)
+        ? ` · ${r.rail_minutes} min without the bus` : '';
+      html += `<div class="via${r.has_bus ? ' bus' : ''}">${r.summary}${alt}</div>`;
+    }
+  });
+  return `<dl class="rail">${html}</dl>`;
+}
+
+function moveInChip(p){
+  const d = p.available_from;
+  if(!d) return `<span class="chip nodate">Move in <b>${p.available_text || 'not stated'}</b></span>`;
+  if(d <= today) return `<span class="chip soon">Free <b>now</b></span>`;
+  const pretty = new Date(d + 'T00:00:00').toLocaleDateString('en-GB',
+                   {day:'numeric', month:'short', year:'numeric'});
+  const days = Math.round((new Date(d) - new Date(today)) / 86400000);
+  return `<span class="chip${days <= 45 ? ' soon' : ''}">Free from <b>${pretty}</b></span>`;
+}
+
+function card(p, t){
+  const shot = p.image_url
+    ? `<a href="${p.url}" target="_blank" rel="noopener"><img class="shot" src="${p.image_url}" alt="" loading="lazy"></a>`
+    : '<div class="noshot"></div>';
+  const plan = p.floorplan_url
+    ? `<a class="planwrap" href="${p.floorplan_url}" target="_blank" rel="noopener">
+         <img class="plan" src="${p.floorplan_url}" alt="Floorplan" loading="lazy">
+         <span class="plantag">floorplan</span></a>`
+    : '';
+  const warn = p.verdict === 'flag'
+    ? `<div class="warn">${(p.reasons||[]).join('. ')}</div>` : '';
+  const chips = [moveInChip(p)];
+  const station = (p.nearest_stations || [])[0];
+  if(station) chips.push(`<span class="chip">${station.name} <b>${station.distance_miles} mi</b></span>`);
+  if(p.entrance_floor) chips.push(`<span class="chip">${p.entrance_floor}</span>`);
+  if(p.council_tax_band) chips.push(`<span class="chip">council tax <b>${p.council_tax_band}</b></span>`);
+  if(p.minimum_term) chips.push(`<span class="chip"><b>${p.minimum_term}</b> month minimum</span>`);
+  if(p.furnished) chips.push(`<span class="chip">${p.furnished}</span>`);
+  const bits = [];
+  if(p.total_area_sqm) bits.push(`${p.total_area_sqm} m² total`);
+  if(p.living_room_note) bits.push(p.living_room_note);
+  if(p.aesthetic_score != null) bits.push(`Looks ${p.aesthetic_score}/10 — ${p.aesthetic_notes||''}`);
+  return `<article class="row">
+    <div>${shot}${plan}</div>
+    <div>
+      ${warn}
+      <div class="price">${money(p.price_pcm)} <span>a month</span></div>
+      <div class="addr"><a href="${p.url}" target="_blank" rel="noopener">${p.address}</a></div>
+      <div class="facts">${chips.join('')}</div>
+      ${rail(p, t)}
+      ${bits.length ? `<p class="note">${bits.join(' &nbsp;·&nbsp; ')}</p>` : ''}
+      <div class="acts">
+        <button class="btn ${p.status==='shortlisted'?'on':''}" data-id="${p.id}"
+                data-set="${p.status==='shortlisted'?'':'shortlisted'}">
+          ${p.status==='shortlisted'?'Shortlisted':'Add to shortlist'}</button>
+        <button class="btn" data-id="${p.id}" data-set="${p.status==='hidden'?'':'hidden'}">
+          ${p.status==='hidden'?'Unhide':'Hide'}</button>
+      </div>
+    </div></article>`;
+}
+
+const EMPTY = {
+  pass:   ['Nothing clears every threshold yet','Run a scan, or loosen one number in config.yaml.'],
+  flag:   ['Nothing needs checking','Everything scanned so far was decisive either way.'],
+  short:  ['Your shortlist is empty','Add places from the other tabs to keep them here.'],
+  reject: ['Nothing ruled out yet','Run a scan to start filling this in.'],
+};
+const FILTERED = ['Nothing matches these filters',
+                  'Every place in this tab is filtered out by the settings above.'];
+
+function draw(){
+  const t = S.data.thresholds;
+  const all = tabs().get(S.tab) || [];
+  const rows = all.filter(p => passes(p, S.F)).sort(SORTS[S.F.sort] || SORTS.newest);
+  const list = el('list');
+
+  el('tally').innerHTML = all.length
+    ? `Showing <b>${rows.length}</b> of ${all.length} in this tab`
+    : 'Nothing scanned into this tab yet';
+  el('reset').disabled = isDefault();
+
+  if(!rows.length){
+    const [h, sub] = all.length ? FILTERED : EMPTY[S.tab];
+    list.innerHTML = `<div class="empty"><b>${h}</b>${sub}</div>`;
+    return;
+  }
+  list.innerHTML = rows.map(p=>card(p,t)).join('');
+  list.querySelectorAll('.btn').forEach(b=> b.onclick = ()=>{
+    const p = S.data.properties.find(x => String(x.id) === String(b.dataset.id));
+    if(!p) return;
+    p.status = b.dataset.set || null;
+    const states = {};
+    for(const row of S.data.properties){
+      if(row.status) states[row.id] = row.status;
+    }
+    try { localStorage.setItem(STATE_KEY, JSON.stringify(states)); } catch(e) {}
+    draw();
+  });
+}
+
+/* ---- running a scan from the page ------------------------------------ */
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+function scanMessage(st){
+  const s = st.stats || {};
+  if(st.running){
+    const mins = Math.floor((Date.now()/1000 - st.started_at) / 60);
+    const head = st.stopping ? 'Stopping after this one — ' : '';
+    return [head + `${plural(s.seen || 0, 'listing')} checked, ${s.pass || 0} fit`
+            + (mins ? ` · ${mins} min` : ''), 'scanning'];
+  }
+  if(st.error) return ['', ''];        // errors get the banner instead
+  if(st.finished_at){
+    const emailed = st.emailed ? ` · emailed ${st.emailed}` : '';
+    const verb = s.stopped ? 'Stopped' : 'Done';
+    return [`${verb} — ${plural(s.seen || 0, 'listing')} checked, ${s.new || 0} new, `
+            + `${s.pass || 0} fit${emailed}`, ''];
+  }
+  return ['', ''];
+}
+
+function paintScan(st){
+  // Failures are usually a sentence about what to change, so they need room to
+  // be read — the corner is only big enough for a running count.
+  const err = el('scanerr');
+  err.textContent = st.error || '';
+  err.classList.toggle('on', !!st.error);
+
+  const [text, cls] = scanMessage(st);
+  const msg = el('scanmsg');
+  msg.textContent = text;
+  msg.className = 'scanmsg ' + cls;
+  // While it runs the button becomes the way to call it off, rather than
+  // going dead — a first scan takes a while and you may not want to wait.
+  const b = el('scan');
+  b.disabled = !!st.stopping;
+  b.textContent = st.running ? (st.stopping ? 'Stopping…' : 'Stop scanning')
+                             : 'Scan Rightmove';
+  b.classList.toggle('stopping', !!st.running);
+  S.scanRunning = !!st.running;
+}
+
+async function pollScan(){
+  const st = await (await fetch('/api/scan')).json();
+  paintScan(st);
+  if(st.running){
+    // Show what it's found so far rather than making you wait for the end —
+    // but only when the count has actually moved, and not on every tick.
+    const found = (st.stats || {}).analysed || 0;
+    const now = Date.now();
+    if(found !== S.lastCount && now - (S.lastRefresh || 0) > 10000){
+      S.lastCount = found;
+      S.lastRefresh = now;
+      load({keepScroll: true});
+    }
+    setTimeout(pollScan, 2000);
+    return;
+  }
+  if(S.scanWasRunning){ S.scanWasRunning = false; load({keepScroll: true}); }
+}
+
+el('scan').onclick = async ()=>{
+  if(S.scanRunning){
+    paintScan(await (await fetch('/api/scan/stop', {method:'POST'})).json());
+    return;
+  }
+  el('scan').disabled = true;
+  S.scanWasRunning = true;
+  paintScan(await (await fetch('/api/scan', {method:'POST'})).json());
+  pollScan();
+};
+
+/* Open by default where there's room for it; on a phone the listings matter
+   more than the controls, so it starts as a one-line summary. */
+el('filters').open = window.innerWidth >= 640;   // matches the CSS breakpoint
+
+/* A focused number input otherwise counts the page scroll as an increment,
+   which quietly moves your thresholds while you're reading the results. */
+document.querySelectorAll('input[type=number]').forEach(n =>
+  n.addEventListener('wheel', e => e.target.blur()));
+
+Object.keys(CONTROLS).forEach(id => {
+  const node = el(id);
+  node.addEventListener(node.tagName === 'SELECT' || node.type === 'checkbox'
+                        || node.type === 'date' ? 'change' : 'input', onSieveChange);
+});
+el('reset').onclick = ()=>{ S.F = defaults(); writeControls(S.F);
+                            try{ localStorage.removeItem(KEY); }catch(e){} draw(); };
+load();
+</script></body></html>
