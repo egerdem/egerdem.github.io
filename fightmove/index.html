@@ -146,7 +146,7 @@ h1{font-family:var(--serif);font-weight:400;font-size:36px;margin:0 0 6px;letter
     </div>
     <div class="scanbox">
       <button id="scan" hidden></button>
-      <div class="scanmsg">Static snapshot<br>updated 03 Sep 2026, 00:07 UTC</div>
+      <div class="scanmsg">Static snapshot<br>updated 03 Sep 2026, 00:15 UTC</div>
     </div>
   </div>
   <div class="banner" id="scanerr"></div>
@@ -212,8 +212,10 @@ h1{font-family:var(--serif);font-weight:400;font-size:36px;margin:0 0 6px;letter
 </div>
 <script>
 const S = {tab:'pass', data:null, F:{}};
-const KEY = 'rentals.filters.v1';
-const STATE_KEY = 'rentals.state.v1';
+// Namespaced and versioned so unrelated pages (and stale pre-release state)
+// cannot silently hide listings on Fightmove.
+const KEY = 'fightmove.filters.v2';
+const STATE_KEY = 'fightmove.state.v2';
 const money = n => '£' + Math.round(n).toLocaleString('en-GB');
 const today = new Date().toISOString().slice(0,10);
 const num = v => (v === '' || v === null || v === undefined) ? null : Number(v);
@@ -321,7 +323,10 @@ async function load(opts){
   S.data = await r.json();
   let states = {};
   try { states = JSON.parse(localStorage.getItem(STATE_KEY) || '{}'); } catch(e) {}
-  for(const row of S.data.properties){ row.status = states[row.id] || null; }
+  for(const row of S.data.properties){
+    const saved = states[row.id];
+    row.status = (saved === 'shortlisted' || saved === 'hidden') ? saved : null;
+  }
   const t = S.data.thresholds;
   el('brief').innerHTML =
     `Under <b>${money(t.max_price)} a month</b>, <b>${t.bedrooms_required} bedrooms</b> each over
@@ -358,11 +363,15 @@ function tabs(){
     ['pass',  'Fits',          p.filter(x=>x.verdict==='pass' && x.status!=='hidden')],
     ['flag',  'Needs a look',  p.filter(x=>x.verdict==='flag' && x.status!=='hidden')],
     ['short', 'Shortlisted',   p.filter(x=>x.status==='shortlisted')],
-    ['reject','Ruled out',     p.filter(x=>x.verdict==='reject')],
+    ['reject','Ruled out',     p.filter(x=>x.verdict==='reject' && x.status!=='hidden')],
+    ['hidden','Hidden',        p.filter(x=>x.status==='hidden')],
   ];
-  el('tabs').innerHTML = sets.map(([k,label,rows])=>
-    `<button class="tab" role="tab" aria-selected="${S.tab===k}" data-tab="${k}">
-       ${label} <span class="n">${rows.filter(x=>passes(x,S.F)).length}</span></button>`).join('');
+  el('tabs').innerHTML = sets.map(([k,label,rows])=>{
+    const visible = rows.filter(x=>passes(x,S.F)).length;
+    const count = visible === rows.length ? `${visible}` : `${visible} / ${rows.length}`;
+    return `<button class="tab" role="tab" aria-selected="${S.tab===k}" data-tab="${k}">
+       ${label} <span class="n">${count}</span></button>`;
+  }).join('');
   document.querySelectorAll('.tab').forEach(b=>
     b.onclick = ()=>{ S.tab = b.dataset.tab; draw(); });
   return new Map(sets.map(([k,,rows])=>[k,rows]));
@@ -472,6 +481,7 @@ const EMPTY = {
   flag:   ['Nothing needs checking','Everything scanned so far was decisive either way.'],
   short:  ['Your shortlist is empty','Add places from the other tabs to keep them here.'],
   reject: ['Nothing ruled out yet','Run a scan to start filling this in.'],
+  hidden: ['Nothing hidden','Places you hide will stay recoverable here.'],
 };
 const FILTERED = ['Nothing matches these filters',
                   'Every place in this tab is filtered out by the settings above.'];
@@ -514,7 +524,8 @@ function scanMessage(st){
   if(st.running){
     const mins = Math.floor((Date.now()/1000 - st.started_at) / 60);
     const head = st.stopping ? 'Stopping after this one — ' : '';
-    return [head + `${plural(s.seen || 0, 'listing')} checked, ${s.pass || 0} fit`
+    return [head + `${plural(s.seen || 0, 'listing')} checked, `
+            + `${s.pass || 0} passed property checks`
             + (mins ? ` · ${mins} min` : ''), 'scanning'];
   }
   if(st.error) return ['', ''];        // errors get the banner instead
@@ -522,7 +533,7 @@ function scanMessage(st){
     const emailed = st.emailed ? ` · emailed ${st.emailed}` : '';
     const verb = s.stopped ? 'Stopped' : 'Done';
     return [`${verb} — ${plural(s.seen || 0, 'listing')} checked, ${s.new || 0} new, `
-            + `${s.pass || 0} fit${emailed}`, ''];
+            + `${s.pass || 0} passed property checks${emailed}`, ''];
   }
   return ['', ''];
 }
