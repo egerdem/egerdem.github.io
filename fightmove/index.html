@@ -146,7 +146,7 @@ h1{font-family:var(--serif);font-weight:400;font-size:36px;margin:0 0 6px;letter
     </div>
     <div class="scanbox">
       <button id="scan" hidden></button>
-      <div class="scanmsg">Static snapshot<br>updated 04 Sep 2026, 08:44 UTC</div>
+      <div class="scanmsg">Static snapshot<br>updated 04 Sep 2026, 09:05 UTC</div>
     </div>
   </div>
   <div class="banner" id="scanerr"></div>
@@ -521,11 +521,14 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 function scanMessage(st){
   const s = st.stats || {};
+  const propertyOnly = Math.max(0, (s.pass || 0) - (s.fit || 0));
+  const result = `${s.fit || 0} fit the full brief, `
+               + `${propertyOnly} property-only pass${propertyOnly === 1 ? '' : 'es'}`;
   if(st.running){
     const mins = Math.floor((Date.now()/1000 - st.started_at) / 60);
     const head = st.stopping ? 'Stopping after this one — ' : '';
     return [head + `${plural(s.seen || 0, 'listing')} checked, `
-            + `${s.pass || 0} passed property checks`
+            + result
             + (mins ? ` · ${mins} min` : ''), 'scanning'];
   }
   if(st.error) return ['', ''];        // errors get the banner instead
@@ -533,7 +536,7 @@ function scanMessage(st){
     const emailed = st.emailed ? ` · emailed ${st.emailed}` : '';
     const verb = s.stopped ? 'Stopped' : 'Done';
     return [`${verb} — ${plural(s.seen || 0, 'listing')} checked, ${s.new || 0} new, `
-            + `${s.pass || 0} passed property checks${emailed}`, ''];
+            + `${result}${emailed}`, ''];
   }
   return ['', ''];
 }
