@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAERIR — walking through a latent room impulse response</title>
+<meta name="description" content="Navigating a pretrained RIR autoencoder's latent space by microphone coordinate, on the MeshRIR dataset.">
+<style>
+:root{
+  --bg:#fbfbfa; --panel:#fff; --ink:#1a1a19; --muted:#6b6b66; --line:#e3e2dd;
+  --accent:#c0392b; --accent2:#1f6f8b; --grid:#d8d7d1; --ok:#2d7a4f;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14140f; --panel:#1c1c18; --ink:#eceae2; --muted:#9b998f; --line:#31312a;
+  --accent:#e8695a; --accent2:#67b6cf; --grid:#3a3a32; --ok:#63c48c;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:19px;margin:44px 0 12px;letter-spacing:-.01em}
+h3{font-size:15px;margin:22px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+p{margin:0 0 14px;max-width:68ch}
+a{color:var(--accent2)}
+.lede{font-size:17px;color:var(--muted);max-width:64ch;margin-bottom:22px}
+.tag{display:inline-block;font-size:12px;color:var(--muted);border:1px solid var(--line);
+  border-radius:99px;padding:2px 10px;margin:0 6px 8px 0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+
+.demo{display:grid;grid-template-columns:minmax(280px,380px) 1fr;gap:20px;align-items:start}
+@media(max-width:820px){.demo{grid-template-columns:1fr}}
+canvas{display:block;width:100%;border-radius:8px}
+#map{aspect-ratio:1;cursor:crosshair;touch-action:none;background:transparent}
+.plots canvas{margin-bottom:10px;background:transparent}
+
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:10px;margin-top:14px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.stat b{display:block;font-size:17px;font-variant-numeric:tabular-nums;font-weight:600}
+.stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+.controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:16px}
+label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+input[type=range]{width:150px;accent-color:var(--accent)}
+button{font:inherit;font-size:13px;padding:7px 14px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+button:hover{border-color:var(--muted)}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+
+table{border-collapse:collapse;font-size:13.5px;margin:10px 0 18px;width:100%;max-width:640px}
+th,td{text-align:right;padding:6px 12px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+thead th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+tr.win td{color:var(--ok);font-weight:600}
+figure{margin:18px 0}
+figure img{width:100%;border:1px solid var(--line);border-radius:10px}
+figcaption{font-size:13px;color:var(--muted);margin-top:8px;max-width:68ch}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;
+  background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.note{border-left:3px solid var(--accent);padding:2px 0 2px 14px;color:var(--muted);margin:16px 0}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+#loading{color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Walking through a latent room impulse response</h1>
+<p class="lede">A room impulse response autoencoder, frozen and never fine-tuned, turns out to
+organise its latent space by microphone coordinate. Move the listener and the response moves with it —
+continuously, including through positions that were never measured.</p>
+
+<div>
+  <span class="tag">MeshRIR · 441 mics · 5 cm grid</span>
+  <span class="tag">FLAC VAE · pretrained, frozen</span>
+  <span class="tag">latent 32 × 10 = 320 numbers</span>
+</div>
+
+<h2>Move the microphone</h2>
+<div class="panel demo">
+  <div>
+    <canvas id="map" width="760" height="760"></canvas>
+    <div class="controls" style="margin-top:12px">
+      <label>x <input type="range" id="sx" min="0" max="40" value="20"></label>
+      <label>y <input type="range" id="sy" min="0" max="40" value="20"></label>
+    </div>
+    <div class="controls">
+      <div class="seg" id="fieldSeg">
+        <button data-f="delay" class="on">arrival</button>
+        <button data-f="drr">DRR</button>
+        <button data-f="c50">C50</button>
+      </div>
+      <button id="playRir">▶ RIR</button>
+      <button id="playVoice">▶ voice in this room</button>
+    </div>
+    <p id="fieldNote" style="font-size:12.5px;color:var(--muted);margin:12px 0 0"></p>
+    <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">
+      Drag anywhere on the map. Small dots are the 441 real measurement positions; every other
+      pixel is a decoded impulse response at a coordinate nobody measured.
+    </p>
+  </div>
+
+  <div class="plots">
+    <canvas id="wave" width="900" height="300"></canvas>
+    <canvas id="edc" width="900" height="300"></canvas>
+    <div class="controls" style="margin-top:0">
+      <div class="seg" id="modeSeg">
+        <button data-m="latent" class="on">latent (continuous)</button>
+        <button data-m="nearest">nearest measured (staircase)</button>
+      </div>
+    </div>
+    <p id="modeNote" style="font-size:12.5px;color:var(--muted);margin:10px 0 0">
+      Continuous: defined at every coordinate, including the three quarters of the map that were never measured.</p>
+    <div class="readout">
+      <div class="stat"><b id="mPos">—</b><span>position</span></div>
+      <div class="stat"><b id="mDist">—</b><span>to source</span></div>
+      <div class="stat"><b id="mDelay">—</b><span>arrival</span></div>
+      <div class="stat"><b id="mDrr">—</b><span>DRR</span></div>
+      <div class="stat"><b id="mC50">—</b><span>C50</span></div>
+    </div>
+    <p id="loading">loading field…</p>
+  </div>
+</div>
+
+<h2>What “moving in the latent space” actually means</h2>
+<p>Each measured impulse response <code>h(x)</code> is pushed through the encoder to a point
+<code>z(x)</code> — 320 numbers. Do that for all 441 microphones and you get 441 points. They are not
+scattered: they form a smooth two-dimensional sheet inside that 320-dimensional space, indexed by
+where the microphone was standing.</p>
+<p>So “moving” means: pick any coordinate, including one between microphones, read the corresponding
+point off that sheet by interpolating its neighbours, and run it through the decoder. What comes back
+is a 10&nbsp;240-sample impulse response at 22.05&nbsp;kHz — a real waveform you can listen to, for a
+position nobody ever measured.</p>
+<p>Every position on the map above is one such decode. At the 441 measured spots it approximates the
+real recording; everywhere in between it is invented, and the point of the demo is that it is invented
+<em>smoothly</em>.</p>
+
+<h2>Where the position information lives</h2>
+<p>The latent is 32 channels × 10 time frames, each frame covering 46&nbsp;ms of the response.
+Position is not spread evenly across it — it sits almost entirely in the first two frames, the direct
+sound and the early reflections. The remaining eight, the reverberant tail, carry very little.</p>
+<p>That is what the physics predicts. This is one room, so the late field is diffuse and decays the
+same way wherever you stand; there is no position information in it to find. It is also 80&nbsp;% of
+the latent, which is why looking at the latent as a whole hides the signal.</p>
+<p>Use only those first two frames and the leading direction of the latent correlates
+<strong>0.988</strong> with the direct sound's time of arrival. A frozen autoencoder, trained on a
+different dataset entirely, spends its main axis on time of flight.</p>
+<figure>
+  <img src="figures/smoothness.png" alt="Six panels analysing the latent field: position information per latent frame, the physical grid drawn in latent space using all frames versus the first two, latent PCA coloured by source distance, PC1 painted onto the mic plane, and latent distance against physical distance.">
+  <figcaption>Top middle versus top right is the whole argument. The same 441 microphones, each joined
+  to its four grid neighbours and drawn in latent space: a tangle when you use all ten latent frames,
+  a mesh when you use only the first two.</figcaption>
+</figure>
+
+<h2>What it is not good for</h2>
+<p>Accuracy. Predicting a held-out microphone from its neighbours, simply copying the nearest
+measured response wins — comfortably. Microphones 5&nbsp;cm apart produce responses that differ by
+less than the autoencoder's own reconstruction error, so the model has nothing to add. Only when the
+measurements thin out to roughly half a metre does latent interpolation start to win.</p>
+<div class="note">With no training, no fine-tuning, and 320 numbers per response, copying the
+nearest measured RIR is more accurate than anything we decode. But a lookup table only answers where
+you measured. We can decode continuously inside the microphone grid.</div>
+
+<h2>One more thing the autoencoder does not do</h2>
+<p>It does not preserve waveform phase. Sample-level correlation between an original response and its
+own reconstruction is 0.02–0.16, and no time shift recovers it. Envelope correlation, meanwhile, is
+0.99. The cause is in the training configuration: the time-domain loss weight is set to exactly zero,
+so the model is optimised on multi-resolution spectral magnitude and never on the waveform itself.</p>
+<p>It is a magnitude autoencoder. Room acoustics come back accurately — reverberation time to within a
+few percent, clarity to a few tenths of a decibel — while the fine time structure is reinvented. For
+listening this matters less than it sounds: the late field of a reverberation tail is perceptually
+defined by its energy envelope, which is why algorithmic reverbs work at all. The audible cost sits in
+the first ten milliseconds.</p>
+
+<footer>
+Built on <a href="https://www.sh01.org/MeshRIR/">MeshRIR</a> (S1-M3969, Koyama et al.) and the
+pretrained autoencoder from <a href="https://github.com/AmandineBtto/FLAC">FLAC</a>
+(Brunetto, CVPR 2026). Nothing was trained or fine-tuned here; the checkpoint is used exactly as
+released. Dry vocal from <a href="https://zenodo.org/records/1193957">VocalSet</a>
+(Wilkins et al., CC BY 4.0). <a href="../">← back</a>
+</footer>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const state = {meta:null, wlo:null, whi:null, edc:null, rirs:null, i:20, j:20, mode:"latent", field:"delay"};
+
+const FIELD_TEXT = {
+  delay: "Colour = when the direct sound arrives in the decoded impulse response, in samples. "
+       + "Red is early (close to the loudspeaker, off to the upper right), blue is late.",
+  drr:   "Colour = direct-to-reverberant ratio of the decoded impulse response, in dB. "
+       + "Red is a stronger direct sound relative to the reverberation; blue is weaker.",
+  c50:   "Colour = C50 clarity of the decoded impulse response, in dB — energy in the first "
+       + "50 ms against everything after it."
+};
+function setFieldNote(){ $("#fieldNote").textContent = FIELD_TEXT[state.field]; }
+
+function fineIndex(i,j){ return j*state.meta.grid.n + i; }
+function nearestNode(i,j){ return [Math.round(i/2)*2, Math.round(j/2)*2]; }
+function activeIndex(){
+  if(state.mode==="nearest"){ const [ni,nj]=nearestNode(state.i,state.j); return fineIndex(ni,nj); }
+  return fineIndex(state.i,state.j);
+}
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+async function load(){
+  const meta = await (await fetch("data/meta.json")).json();
+  state.meta = meta;
+  const N = meta.grid.n*meta.grid.n, C = meta.curve_n, Wn = meta.wave_n;
+  const buf = await (await fetch("data/field.bin")).arrayBuffer();
+  const raw = new Int16Array(buf);
+  const deq = (a,lo,hi)=>{const o=new Float32Array(a.length);
+    for(let k=0;k<a.length;k++)o[k]=(a[k]+32768)/65535*(hi-lo)+lo; return o;};
+  const M = meta.wave_max;
+  state.wlo = deq(raw.subarray(0, N*Wn), -M, M);
+  state.whi = deq(raw.subarray(N*Wn, 2*N*Wn), -M, M);
+  state.edc = deq(raw.subarray(2*N*Wn, 2*N*Wn + N*C), meta.edc_range[0], meta.edc_range[1]);
+  $("#sx").max = $("#sy").max = meta.grid.n-1;
+  $("#sx").value = state.i = (meta.grid.n-1)>>1;
+  $("#sy").value = state.j = (meta.grid.n-1)>>1;
+  $("#loading").textContent = "";
+  setFieldNote();
+  draw();
+  fetch("data/rirs.bin").then(r=>r.arrayBuffer()).then(b=>{ state.rirs = new Int16Array(b); });
+}
+
+/* ---------- map ---------- */
+function fieldValues(){
+  const m = state.meta.metrics;
+  return state.field==="drr" ? m.drr_db : state.field==="c50" ? m.c50_db : m.delay_samples;
+}
+function drawMap(){
+  const c = $("#map"), g = c.getContext("2d"), n = state.meta.grid.n;
+  const W = c.width, cell = W/n;
+  const v = fieldValues();
+  let lo=Infinity, hi=-Infinity;
+  for(const x of v){ if(x<lo)lo=x; if(x>hi)hi=x; }
+  g.clearRect(0,0,W,W);
+  for(let j=0;j<n;j++) for(let i=0;i<n;i++){
+    const [si,sj] = state.mode==="nearest" ? nearestNode(i,j) : [i,j];
+    const t = (v[fineIndex(si,sj)]-lo)/(hi-lo+1e-9);
+    // blue (far / late) -> red (near / early)
+    const r = Math.round(40+195*t), b = Math.round(200-150*t), gg = Math.round(70+60*(1-Math.abs(t-.5)*2));
+    g.fillStyle = `rgb(${r},${gg},${b})`;
+    g.fillRect(i*cell, (n-1-j)*cell, cell+1, cell+1);
+  }
+  // measured mic dots (every 2nd fine node)
+  g.fillStyle = "rgba(255,255,255,.55)";
+  for(let j=0;j<n;j+=2) for(let i=0;i<n;i+=2){
+    g.beginPath(); g.arc((i+.5)*cell,(n-1-j+.5)*cell,2.6,0,7); g.fill();
+  }
+  // cursor
+  const [ni,nj] = nearestNode(state.i,state.j);
+  const ci = state.mode==="nearest"?ni:state.i, cj = state.mode==="nearest"?nj:state.j;
+  const px=(ci+.5)*cell, py=(n-1-cj+.5)*cell;
+  g.strokeStyle="#fff"; g.lineWidth=5; g.beginPath(); g.arc(px,py,17,0,7); g.stroke();
+  g.strokeStyle="#111"; g.lineWidth=2.5; g.beginPath(); g.arc(px,py,17,0,7); g.stroke();
+  g.lineWidth=3; g.strokeStyle="#fff";
+  g.beginPath(); g.moveTo(px-27,py); g.lineTo(px-20,py); g.moveTo(px+20,py); g.lineTo(px+27,py);
+  g.moveTo(px,py-27); g.lineTo(px,py-20); g.moveTo(px,py+20); g.lineTo(px,py+27); g.stroke();
+}
+
+/* ---------- curves ---------- */
+function axes(g, W, H, padL, padR, padT, padB, lo, hi, title, unit, fmt){
+  const ms = state.meta.rir_len/state.meta.sample_rate*1000;
+  g.clearRect(0,0,W,H);
+  g.strokeStyle = css("--grid"); g.lineWidth=1.6; g.fillStyle = css("--muted");
+  g.font = "19px ui-monospace,Menlo,monospace"; g.textAlign="right";
+  for(let k=0;k<=4;k++){
+    const y = padT + (H-padT-padB)*k/4, val = hi-(hi-lo)*k/4;
+    g.beginPath(); g.moveTo(padL,y); g.lineTo(W-padR,y); g.stroke();
+    g.fillText(fmt(val), padL-12, y+7);
+  }
+  g.textAlign="center";
+  for(let k=0;k<=4;k++) g.fillText((ms*k/4).toFixed(0), padL+(W-padL-padR)*k/4, H-16);
+  g.textAlign="left"; g.fillStyle = css("--ink"); g.font="600 21px sans-serif";
+  g.fillText(title, padL, 26);
+  g.textAlign="right"; g.fillStyle=css("--muted"); g.font="18px sans-serif";
+  g.fillText(unit, W-padR, 26);
+}
+
+function drawWave(){
+  const c=$("#wave"), g=c.getContext("2d"), W=c.width, H=c.height;
+  const padL=86, padR=18, padT=44, padB=52, Wn=state.meta.wave_n, M=state.meta.wave_max;
+  axes(g,W,H,padL,padR,padT,padB,-M,M,"Room impulse response","amplitude · ms",v=>v.toFixed(2));
+  const base=activeIndex()*Wn, x0=padL, xw=W-padL-padR, y0=padT, yh=H-padT-padB;
+  const Y = v => y0 + yh*(1 - (v+M)/(2*M));
+  g.strokeStyle=css("--grid"); g.lineWidth=1.2;
+  g.beginPath(); g.moveTo(padL,Y(0)); g.lineTo(W-padR,Y(0)); g.stroke();
+  // fill between the per-bin min and max: this is the signed waveform
+  g.fillStyle=css("--accent");
+  g.beginPath();
+  for(let k=0;k<Wn;k++){ const x=x0+xw*k/(Wn-1); k?g.lineTo(x,Y(state.whi[base+k])):g.moveTo(x,Y(state.whi[base+k])); }
+  for(let k=Wn-1;k>=0;k--){ const x=x0+xw*k/(Wn-1); g.lineTo(x,Y(state.wlo[base+k])); }
+  g.closePath(); g.fill();
+}
+
+function drawEdc(){
+  const c=$("#edc"), g=c.getContext("2d"), W=c.width, H=c.height;
+  const padL=86, padR=18, padT=44, padB=52, C=state.meta.curve_n, lo=-80, hi=5;
+  axes(g,W,H,padL,padR,padT,padB,lo,hi,"Energy decay curve","dB · ms",v=>v.toFixed(0));
+  const base=activeIndex()*C;
+  g.beginPath(); g.strokeStyle=css("--accent2"); g.lineWidth=2.6; g.lineJoin="round";
+  for(let k=0;k<C;k++){
+    const x=padL+(W-padL-padR)*k/(C-1);
+    const y=padT+(H-padT-padB)*(1-(state.edc[base+k]-lo)/(hi-lo));
+    k?g.lineTo(x,Math.max(padT,Math.min(H-padB,y))):g.moveTo(x,Math.max(padT,Math.min(H-padB,y)));
+  }
+  g.stroke();
+}
+
+function draw(){
+  if(!state.meta) return;
+  drawMap();
+  drawWave(); drawEdc();
+  const m = state.meta, k = activeIndex();
+  const x = m.grid.x[k % m.grid.n], y = m.grid.y[Math.floor(k/m.grid.n)];
+  const s = Array.isArray(m.source_xyz[0]) ? m.source_xyz[0] : m.source_xyz;
+  const d = Math.hypot(s[0]-x, s[1]-y, s[2]-m.plane_z);
+  $("#mPos").textContent  = `${x>=0?"+":""}${x.toFixed(2)}, ${y>=0?"+":""}${y.toFixed(2)}`;
+  $("#mDist").textContent = d.toFixed(2)+" m";
+  $("#mDelay").textContent= m.metrics.delay_samples[k]+" smp";
+  $("#mDrr").textContent  = m.metrics.drr_db[k].toFixed(2)+" dB";
+  $("#mC50").textContent  = m.metrics.c50_db[k].toFixed(2)+" dB";
+}
+
+/* ---------- input ---------- */
+function setFromEvent(e){
+  const c=$("#map"), r=c.getBoundingClientRect(), n=state.meta.grid.n;
+  const px=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  const py=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+  state.i = Math.max(0,Math.min(n-1, Math.floor(px/r.width*n)));
+  state.j = Math.max(0,Math.min(n-1, n-1-Math.floor(py/r.height*n)));
+  $("#sx").value=state.i; $("#sy").value=state.j;
+  draw();
+}
+let dragging=false;
+$("#map").addEventListener("pointerdown", e=>{dragging=true; $("#map").setPointerCapture(e.pointerId); setFromEvent(e);});
+$("#map").addEventListener("pointermove", e=>{ if(dragging) setFromEvent(e); });
+$("#map").addEventListener("pointerup", ()=>dragging=false);
+$("#sx").addEventListener("input", e=>{state.i=+e.target.value; draw();});
+$("#sy").addEventListener("input", e=>{state.j=+e.target.value; draw();});
+document.querySelectorAll("#modeSeg button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#modeSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); state.mode=b.dataset.m; draw();
+  $("#modeNote").textContent = state.mode==="nearest"
+    ? "Piecewise constant: the field is flat inside each measured cell and steps at the boundaries."
+    : "Continuous: defined at every coordinate, including the three quarters of the map that were never measured.";
+}));
+document.querySelectorAll("#fieldSeg button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#fieldSeg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); state.field=b.dataset.f; setFieldNote(); drawMap();
+}));
+matchMedia("(prefers-color-scheme:dark)").addEventListener("change", draw);
+
+/* ---------- audio: the decoded RIR, dry or convolved with one click ---------- */
+const audio = {ctx:null, dry:null, dryPending:null};
+
+function ensureCtx(){
+  if(!audio.ctx){
+    audio.ctx = new (window.AudioContext||window.webkitAudioContext)();
+    // Anechoic singing, decoded once and reused. decodeAudioData resamples it
+    // to the context rate for us.
+    audio.dryPending = fetch("audio/dry_voice.mp3")
+      .then(r=>r.arrayBuffer())
+      .then(b=>audio.ctx.decodeAudioData(b))
+      .then(buf=>{ audio.dry = buf; return buf; });
+  }
+  audio.ctx.resume();
+  return audio.ctx;
+}
+function rirBuffer(ctx){
+  // A ConvolverNode only accepts a buffer at the context's own sample rate, so
+  // resample the 22.05 kHz impulse response to whatever the device is running.
+  const m=state.meta, st=m.audio.stride, L=m.audio.len, n=m.audio.n;
+  const ai=Math.min(n-1,Math.round(state.i/st)), aj=Math.min(n-1,Math.round(state.j/st));
+  const off=(aj*n+ai)*L;
+  const ratio=ctx.sampleRate/m.sample_rate, out=Math.max(1,Math.round(L*ratio));
+  const b=ctx.createBuffer(1,out,ctx.sampleRate), d=b.getChannelData(0);
+  for(let k=0;k<out;k++){
+    const u=k/ratio, i0=Math.floor(u), t=u-i0;
+    const a=i0<L?state.rirs[off+i0]/32768:0, c=i0+1<L?state.rirs[off+i0+1]/32768:0;
+    d[k]=a+(c-a)*t;
+  }
+  return b;
+}
+function playRIR(){
+  if(!state.rirs){ $("#loading").textContent="audio still loading…"; return; }
+  const ctx=ensureCtx(), s=ctx.createBufferSource();
+  s.buffer=rirBuffer(ctx);
+  const g=ctx.createGain(); g.gain.value=2.5;
+  s.connect(g).connect(ctx.destination); s.start();
+}
+async function playVoice(){
+  if(!state.rirs){ $("#loading").textContent="audio still loading…"; return; }
+  const ctx=ensureCtx();
+  const dry = audio.dry || await audio.dryPending;
+  const conv=ctx.createConvolver(); conv.normalize=true; conv.buffer=rirBuffer(ctx);
+  const src=ctx.createBufferSource(); src.buffer=dry;
+  const g=ctx.createGain(); g.gain.value=2.2;
+  src.connect(conv).connect(g).connect(ctx.destination); src.start();
+}
+$("#playRir").addEventListener("click", playRIR);
+$("#playVoice").addEventListener("click", ()=>playVoice().catch(e=>{
+  $("#loading").textContent = "audio failed: "+e.message; }));
+
+load().catch(e=>{ $("#loading").textContent="could not load field data: "+e.message; });
+</script>
+</body>
+</html>
