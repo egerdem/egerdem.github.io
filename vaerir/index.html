@@ -164,17 +164,6 @@ measurements thin out to roughly half a metre does latent interpolation start to
 nearest measured RIR is more accurate than anything we decode. But a lookup table only answers where
 you measured. We can decode continuously inside the microphone grid.</div>
 
-<h2>One more thing the autoencoder does not do</h2>
-<p>It does not preserve waveform phase. Sample-level correlation between an original response and its
-own reconstruction is 0.02–0.16, and no time shift recovers it. Envelope correlation, meanwhile, is
-0.99. The cause is in the training configuration: the time-domain loss weight is set to exactly zero,
-so the model is optimised on multi-resolution spectral magnitude and never on the waveform itself.</p>
-<p>It is a magnitude autoencoder. Room acoustics come back accurately — reverberation time to within a
-few percent, clarity to a few tenths of a decibel — while the fine time structure is reinvented. For
-listening this matters less than it sounds: the late field of a reverberation tail is perceptually
-defined by its energy envelope, which is why algorithmic reverbs work at all. The audible cost sits in
-the first ten milliseconds.</p>
-
 <footer>
 Built on <a href="https://www.sh01.org/MeshRIR/">MeshRIR</a> (S1-M3969, Koyama et al.) and the
 pretrained autoencoder from <a href="https://github.com/AmandineBtto/FLAC">FLAC</a>
