@@ -140,14 +140,13 @@ real recording; everywhere in between it is invented, and the point of the demo 
 
 <h2>Where the position information lives</h2>
 <p>The latent is 32 channels × 10 time frames, each frame covering 46&nbsp;ms of the response.
-Position is not spread evenly across it — it sits almost entirely in the first two frames, the direct
+Position is not spread evenly across it: it sits almost entirely in the first two frames, the direct
 sound and the early reflections. The remaining eight, the reverberant tail, carry very little.</p>
 <p>That makes sense. This is one room, so the late field is diffuse and decays more or less the
-same way wherever you stand; there is no position information in it to find. It is also 80&nbsp;% of
-the latent, which is why looking at the latent as a whole hides the signal.</p>
+same way wherever you stand; there is no position information in it to find.</p>
 <p>Use only those first two frames and the leading direction of the latent correlates
-<strong>0.988</strong> with the direct sound's time of arrival. A frozen autoencoder, trained on a
-different dataset entirely, spends its main axis on time of flight.</p>
+<strong>0.988</strong> with the direct sound's time of arrival. Can we say: a frozen autoencoder, trained on a
+different dataset entirely, spends its main axis on time of flight?</p>
 <figure>
   <img src="figures/smoothness.png" alt="Six panels analysing the latent field: position information per latent frame, the physical grid drawn in latent space using all frames versus the first two, latent PCA coloured by source distance, PC1 painted onto the mic plane, and latent distance against physical distance.">
   <figcaption>Top middle versus top right is the whole argument. The same 441 microphones, each joined
@@ -157,7 +156,7 @@ different dataset entirely, spends its main axis on time of flight.</p>
 
 <h2>Not good for:</h2>
 <p>Accuracy. Predicting a held-out microphone from its neighbours, simply copying the nearest
-measured response wins — comfortably. Microphones 5&nbsp;cm apart produce responses that differ by
+measured response wins. Microphones 5&nbsp;cm apart produce responses that differ by
 less than the autoencoder's own reconstruction error, so the model has nothing to add. Only when the
 measurements thin out to roughly half a metre does latent interpolation start to win.</p>
 <div class="note">With no training, no fine-tuning, and 320 numbers per response, copying the
