@@ -60,6 +60,46 @@
         .fancybox-margin {
             margin-right: 16px;
         }
+
+        .pub {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .pub p {
+            margin: 0;
+        }
+
+        .pub-thumb {
+            flex: 0 0 300px;
+            width: 300px;
+            height: 190px;
+            object-fit: contain;
+            padding: 8px;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 10px;
+        }
+
+        .fancybox-close {
+            background: none;
+            color: #fff;
+            font-size: 36px;
+            line-height: 36px;
+            text-align: center;
+        }
+
+        .fancybox-close::before {
+            content: "\00d7";
+        }
+
+        @media (max-width: 600px) {
+            .pub {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
     </style>
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -399,7 +439,8 @@
             <div class="row" style="margin-bottom: 20px;">
                 <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
                     style="visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
-                    <div class="col-md-12 col-sm-12">
+                    <div class="col-md-12 col-sm-12 pub">
+                        <a class="fancybox" href="sf-flow/images/diag5.jpg"><img class="pub-thumb" src="sf-flow/images/diag5.jpg" alt=""></a>
                         <p>
                             <a href="https://arxiv.org/abs/2605.10398" target="_blank">
                                 <span class="mybold">SF-Flow: Sound Field Magnitude Estimation via Flow Matching Guided by Sparse Measurements</span>
@@ -418,7 +459,8 @@
             <div class="row" style="margin-bottom: 20px;">
                 <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
                     style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
-                    <div class="col-md-12 col-sm-12">
+                    <div class="col-md-12 col-sm-12 pub">
+                        <a class="fancybox" href="images/paperfigures/3dmultiple.png"><img class="pub-thumb" src="images/paperfigures/3dmultiple.png" alt=""></a>
                         <p>
                             <a href="https://aes2.org/publications/elibrary-page/?id=22525" target="_blank"><span
                                     class="mybold">3D Multiple Sound Source Localization With Multiple Spherical Mic.
@@ -451,7 +493,8 @@
             <div class="row" style="margin-bottom: 20px;">
                 <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
                     style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
-                    <div class="col-md-12 col-sm-12">
+                    <div class="col-md-12 col-sm-12 pub">
+                        <a class="fancybox" href="images/paperfigures/taslp.png"><img class="pub-thumb" src="images/paperfigures/taslp.png" alt=""></a>
                         <p>
                             <a href="https://ieeexplore.ieee.org/document/10079146" target="_blank"><span
                                     class="mybold">3D Perceptual Soundfield Reconstruction via Virtual Microphone
@@ -467,7 +510,8 @@
             <div class="row" style="margin-bottom: 20px;">
                 <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
                     style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
-                    <div class="col-md-12 col-sm-12">
+                    <div class="col-md-12 col-sm-12 pub">
+                        <a class="fancybox" href="images/paperfigures/spwin.png"><img class="pub-thumb" src="images/paperfigures/spwin.png" alt=""></a>
                         <p>
                             <a href="https://ieeexplore.ieee.org/document/10319880/" target="_blank"><span
                                     class="mybold">Sound Field Interpolation via Sparse Plane Wave Decomposition for
@@ -484,7 +528,8 @@
             <div class="row" style="margin-bottom: 20px;">
                 <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
                     style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
-                    <div class="col-md-12 col-sm-12">
+                    <div class="col-md-12 col-sm-12 pub">
+                        <a class="fancybox" href="images/paperfigures/timedelay.png"><img class="pub-thumb" src="images/paperfigures/timedelay.png" alt=""></a>
                         <p>
                             <a href="https://ieeexplore.ieee.org/document/9632715" target="_blank"><span
                                     class="mybold">Internal Time Delay Calibration of Spherical Microphone Arrays for
@@ -502,7 +547,8 @@
             <div class="row" style="margin-bottom: 20px;">
                 <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
                     style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
-                    <div class="col-md-12 col-sm-12">
+                    <div class="col-md-12 col-sm-12 pub">
+                        <a class="fancybox" href="images/paperfigures/rot.png"><img class="pub-thumb" src="images/paperfigures/rot.png" alt=""></a>
                         <p>
                             <a href="https://ieeexplore.ieee.org/document/9610848" target="_blank"><span
                                     class="mybold">Orientation Calibration of Rigid Spherical Microphone Arrays for
@@ -519,7 +565,8 @@
             <div class="row" style="margin-bottom: 20px;">
                 <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
                     style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
-                    <div class="col-md-12 col-sm-12">
+                    <div class="col-md-12 col-sm-12 pub">
+                        <a class="fancybox" href="images/paperfigures/psr.png"><img class="pub-thumb" src="images/paperfigures/psr.png" alt=""></a>
                         <p>
                             <a href="https://ieeexplore.ieee.org/document/8682726" target="_blank"><span
                                     class="mybold">Perceptual Soundfield Reconstruction in Three Dimensions via Sound
@@ -537,7 +584,8 @@
             <div class="row" style="margin-bottom: 20px;">
                 <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
                     style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
-                    <div class="col-md-12 col-sm-12">
+                    <div class="col-md-12 col-sm-12 pub">
+                        <a class="fancybox" href="images/paperfigures/metro.png"><img class="pub-thumb" src="images/paperfigures/metro.png" alt=""></a>
                         <p>
                             <a href="https://www.researchgate.net/publication/336830215_Acoustic_Design_And_Analysis_Methods_Of_Underground_Subway_Stations_Yeralti_Metro_Istasyonlarinda_Akustik_Tasarim_Ve_Analiz_Yontemleri?_tp=eyJjb250ZXh0Ijp7InBhZ2UiOiJwcm9maWxlIiwicHJldmlvdXNQYWdlIjpudWxsLCJwb3NpdGlvbiI6InBhZ2VDb250ZW50In19"
                                 target="_blank"><span class="mybold">Acoustic Design and Analysis Methods of Underground
@@ -554,7 +602,8 @@
             <div class="row" style="margin-bottom: 20px;">
                 <div class="block wow fadeInLeft" data-wow-delay=".2s" data-wow-duration="400ms"
                     style=" visibility: hidden; animation-duration: 400ms; animation-delay: 0.0s; animation-name: none;">
-                    <div class="col-md-12 col-sm-12">
+                    <div class="col-md-12 col-sm-12 pub">
+                        <a class="fancybox" href="images/paperfigures/chiller.png"><img class="pub-thumb" src="images/paperfigures/chiller.png" alt=""></a>
                         <p>
                             <a href="https://www.researchgate.net/publication/336830036_Noise_Barrier_Design_For_Chiller_Noise_Sogutma_Grubu_Gurultusu_Icin_Gurultu_Bariyeri_Tasarimi"
                                 target="_blank"><span class="mybold">Noise Barrier Design for Chiller
@@ -673,7 +722,7 @@
                         <div class="slide-deck" tabindex="0" aria-roledescription="carousel"
                             aria-label="BILL E.AI.VANS slides">
                             <div class="slide-deck-frame">
-                                <img class="is-active" src="images/workshops/upf-2023/01.webp" loading="lazy"
+                                <img class="is-active" src="images/workshops/upf-2023/first.jpg" loading="lazy"
                                     alt="Title slide: BILL E.AI.VANS, generating jazzy, coherent melodic improvisations over a real or generated chord progression, by Ege, Alex, Alberto and Oguz">
                                 <img data-src="images/workshops/upf-2023/02.webp" loading="lazy"
                                     alt="Dataset and approach: 450 transcribed jazz solos from the Weimar Jazz Database; melodies as (duration, pitch) shapes, harmonized to the chord progression by rule-based Quarmonization">
