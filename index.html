@@ -874,7 +874,7 @@
         Flipside (Side B). Hidden until the Flipside tab is clicked, see
         assets/js/flipside.js and assets/css/flipside.css.
 
-        Each .fs-reel below is a film strip. To add something, copy one of these
+        Each .fs-reel below is a grid of frames, two per row. To add something, copy one of these
         into it (frames number themselves: B1.01, B1.02, ...):
 
         YouTube video or Short:
@@ -952,8 +952,31 @@
                 <h2 class="fs-track-title">Music</h2>
                 <p class="fs-track-lede">some text ...</p>
             </div>
-            <div class="fs-reel" role="region" aria-label="Music" tabindex="0">
-                <figure class="fs-frame"><span class="fs-slate">Coming soon</span></figure>
+            <div class="fs-reel" role="region" aria-label="Music">
+                <figure class="fs-frame" data-youtube="8jn2QtwbHg4">
+                    <figcaption><b>Straight No Chaser (piano solo)</b> Akbank Jazz Festival ’23, Istanbul</figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="8U5qTcYXm6k">
+                    <figcaption><b>Samba Em Preludio</b> İdil Naz Dönmez, me on piano · Nardis Jazz Club</figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="YijSfmSRNMg">
+                    <figcaption><b>A tiny transcription: Gruv Kid</b></figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="dhy8J2mdtnE">
+                    <figcaption><b>Should I make my own vlog music? K.K. Cruisin’</b> Animal Crossing</figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="qJ7CQb2-rvU">
+                    <figcaption><b>Hiromi Uehara – Firefly</b></figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="plpqdDyJBn0">
+                    <figcaption><b>Last home rehearsal before Zeytinli Rock Festival</b> 25.08.2017</figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="LGGy1QtGpKE">
+                    <figcaption><b>Playing piano in a musical: Urinetown</b> Act One Finale</figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="nvRtUpE2oY8">
+                    <figcaption><b>Giderayak – Ninni</b> Calm jamming as emotional guys</figcaption>
+                </figure>
             </div>
         </section>
 
@@ -962,11 +985,24 @@
             <div class="fs-track-head">
                 <span class="fs-track-no">B2</span>
                 <h2 class="fs-track-title">Filming</h2>
-                <p class="fs-track-lede">Short films, YouTube videos, reels and podcasts, including an award-winning
-                    documentary-style short cut from thousands of clips.</p>
+                <p class="fs-track-lede">Short films, YouTube videos, reels and podcasts.</p>
             </div>
-            <div class="fs-reel" role="region" aria-label="Filming" tabindex="0">
-                <figure class="fs-frame"><span class="fs-slate">Coming soon</span></figure>
+            <div class="fs-reel" role="region" aria-label="Filming">
+                <figure class="fs-frame" data-youtube="scOYponPGow">
+                    <figcaption><b>My Uni Life in 5 Minutes</b> award-winning documentary-style short cut from thousands of clips</figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="sEM58wcwh_s">
+                    <figcaption><b>What I Imagined While Listening to Music – Cuba</b></figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="M1kn7kmI-j8">
+                    <figcaption><b>A Surreal Holiday Silence on Campus</b></figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="kbE_U4Lj8KQ">
+                    <figcaption><b>A Quite Short Film About the Universe</b> edited, sound designed, sound mixed</figcaption>
+                </figure>
+                <figure class="fs-frame" data-youtube="h1YsN7nbdMI">
+                    <figcaption><b>A Quite Short Film About the Universe – Trailer</b> edited, colour graded, sound edit &amp; mix</figcaption>
+                </figure>
             </div>
         </section>
 
@@ -977,14 +1013,17 @@
                 <h2 class="fs-track-title">Experiments</h2>
                 <p class="fs-track-lede">Small apps and experiments, made outside research.</p>
             </div>
-            <div class="fs-reel" role="region" aria-label="Experiments" tabindex="0">
-                <!-- add the link: <a class="fs-slate" href="...">Litai</a> -->
+            <div class="fs-reel" role="region" aria-label="Experiments">
                 <figure class="fs-frame">
-                    <span class="fs-slate">Litai</span>
-                    <figcaption>A web app for PhD literature</figcaption>
+                    <a href="https://litai.app/" target="_blank"><img src="images/flipside/experiments/litai.webp"
+                            alt="Litai home page" loading="lazy"></a>
+                    <figcaption><b>Litai</b> A web app for PhD literature</figcaption>
                 </figure>
-                <!-- add the link: <a class="fs-slate" href="...">Fightmove</a> -->
-                <figure class="fs-frame"><span class="fs-slate">Fightmove</span></figure>
+                <figure class="fs-frame">
+                    <a href="fightmove/" target="_blank"><img src="images/flipside/experiments/fightmove.webp"
+                            alt="Fightmove page" loading="lazy"></a>
+                    <figcaption><b>Fightmove</b></figcaption>
+                </figure>
             </div>
         </section>
 

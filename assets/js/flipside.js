@@ -137,24 +137,6 @@
             f.prepend(b);
         });
 
-        // reels can be dragged sideways with a mouse, like pulling film
-        side.querySelectorAll('.fs-reel').forEach(function (reel) {
-            var x0 = null, s0 = 0, moved = false;
-            reel.addEventListener('pointerdown', function (e) {
-                if (e.pointerType === 'mouse') { x0 = e.clientX; s0 = reel.scrollLeft; moved = false; }
-            });
-            addEventListener('pointermove', function (e) {
-                if (x0 === null) return;
-                if (Math.abs(e.clientX - x0) > 4) { moved = true; reel.classList.add('is-dragging'); }
-                if (moved) reel.scrollLeft = s0 - (e.clientX - x0);
-            });
-            addEventListener('pointerup', function () { x0 = null; reel.classList.remove('is-dragging'); });
-            reel.addEventListener('click', function (e) {
-                if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
-            }, true);
-            reel.addEventListener('dragstart', function (e) { e.preventDefault(); });
-        });
-
         field();
     }
 
