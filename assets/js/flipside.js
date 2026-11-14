@@ -137,6 +137,21 @@
             f.prepend(b);
         });
 
+        // swipe left/right in the image viewer (fancybox) to go through the doodles
+        var swipeX = null, swipeY = null;
+        document.addEventListener('touchstart', function (e) {
+            if (!e.target.closest('.fancybox-wrap')) return;
+            swipeX = e.touches[0].clientX;
+            swipeY = e.touches[0].clientY;
+        }, { passive: true });
+        document.addEventListener('touchend', function (e) {
+            if (swipeX === null) return;
+            var dx = e.changedTouches[0].clientX - swipeX;
+            var dy = e.changedTouches[0].clientY - swipeY;
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) $.fancybox[dx < 0 ? 'next' : 'prev']();
+            swipeX = swipeY = null;
+        });
+
         field();
     }
 
